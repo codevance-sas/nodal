@@ -1,0 +1,57 @@
+/**
+ * Array of available casing component types.
+ */
+export const casingTypeOptions = ['Casing Joint', 'Casing Pup Joint'];
+
+/**
+ * Array of available BHA component types.
+ */
+export const bhaTypeOptions = [
+  'Anchor/Catcher',
+  'Bull Plug',
+  'Centralizer',
+  'Cross Over',
+  'Cup Packer',
+  'Depth Correction',
+  'ESP - Cable',
+  'ESP - Discharge',
+  'ESP - Intake',
+  'ESP - Motor Lead Extension',
+  'ESP - Motor',
+  'ESP - Pump',
+  'ESP - Seal',
+  'ESP - Sensor',
+  'Fiberglass Sucker Rod',
+  'Fish',
+  'Float Collar',
+  'Float Shoe',
+  'Gas Lift Bumper Spring Assembly',
+  'Gas Lift Mandrel',
+  'Gas Lift Orifice',
+  'Gas Separator',
+  'Jet Pump',
+  'Marker Joint',
+  'Mechanical Seating Nipple',
+  'On/Off Tool',
+  'Packer',
+  'Perforated Joint',
+  'Perforated Sub',
+  'Polished Rod',
+  'Profile Nipple',
+  'Pump Seating Nipple',
+  'Rod Pump Gas Anchor',
+  'Rod Pump',
+  'Rod Rotator',
+  'Sand Screen',
+  'Sand Separator',
+  'Shear Tool',
+  'Slotted Joint',
+  'Slotted Seating Nipple',
+  'Slotted Sub',
+  'Stabilizer Sub',
+  'Steel Sucker Rod',
+  'Toe Sleeve',
+  'Tubing Hanger',
+  'Tubing Pup Joint',
+  'Tubing',
+];

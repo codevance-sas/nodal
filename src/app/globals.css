@@ -1,0 +1,288 @@
+/* Import SF Pro font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Apple Design System Custom Properties */
+@layer base {
+  :root {
+    /* Apple Spacing Scale (8pt system) */
+    --space-0: 0;
+    --space-1: 0.25rem; /* 4px */
+    --space-2: 0.5rem;  /* 8px */
+    --space-3: 0.75rem; /* 12px */
+    --space-4: 1rem;    /* 16px */
+    --space-5: 1.25rem; /* 20px */
+    --space-6: 1.5rem;  /* 24px */
+    --space-8: 2rem;    /* 32px */
+    --space-10: 2.5rem; /* 40px */
+    --space-12: 3rem;   /* 48px */
+    --space-16: 4rem;   /* 64px */
+    --space-20: 5rem;   /* 80px */
+    --space-24: 6rem;   /* 96px */
+
+    /* Apple Border Radius System */
+    --radius-none: 0;
+    --radius-xs: 2px;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 12px;
+    --radius-2xl: 16px;
+    --radius-3xl: 24px;
+    --radius-full: 9999px;
+
+    /* Apple System Colors - Light Mode */
+    --system-blue: 214 100% 59%;
+    --system-green: 149 85% 44%;
+    --system-indigo: 234 89% 74%;
+    --system-orange: 28 100% 64%;
+    --system-pink: 316 73% 69%;
+    --system-purple: 276 100% 81%;
+    --system-red: 5 78% 57%;
+    --system-teal: 173 83% 39%;
+    --system-yellow: 48 100% 67%;
+    --system-gray: 240 6% 50%;
+    --system-gray2: 240 5% 64%;
+    --system-gray3: 240 5% 84%;
+    --system-gray4: 240 5% 91%;
+    --system-gray5: 240 5% 96%;
+    --system-gray6: 0 0% 99%;
+
+    /* Apple Semantic Colors */
+    --background: var(--system-gray6);
+    --foreground: 240 10% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 9%;
+    --primary: var(--system-blue);
+    --primary-foreground: 0 0% 100%;
+    --secondary: var(--system-gray5);
+    --secondary-foreground: 240 10% 9%;
+    --muted: var(--system-gray5);
+    --muted-foreground: var(--system-gray);
+    --accent: var(--system-blue);
+    --accent-foreground: 0 0% 100%;
+    --destructive: var(--system-red);
+    --destructive-foreground: 0 0% 100%;
+    --border: var(--system-gray4);
+    --input: var(--system-gray5);
+    --ring: var(--system-blue);
+
+    /* Apple Liquid Glass Properties */
+    --glass-opacity: 0.8;
+    --glass-blur: 20px;
+    --glass-saturation: 1.8;
+    --glass-brightness: 1.1;
+
+    /* Apple Elevation Shadows */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.02);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.03);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.08), 0 4px 6px rgba(0, 0, 0, 0.03);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.08), 0 8px 10px rgba(0, 0, 0, 0.04);
+    --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.12);
+
+    /* Legacy support */
+    --radius: var(--radius-md);
+    --sidebar-background: rgba(246, 247, 249, 0.95);
+    --sidebar-foreground: 240 10% 9%;
+    --sidebar-primary: var(--system-blue);
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: var(--system-gray5);
+    --sidebar-accent-foreground: 240 10% 9%;
+    --sidebar-border: var(--system-gray4);
+    --sidebar-ring: var(--system-blue);
+  }
+
+  .dark {
+    /* Apple System Colors - Dark Mode */
+    --system-blue: 214 100% 69%;
+    --system-green: 148 100% 58%;
+    --system-indigo: 234 66% 84%;
+    --system-orange: 28 100% 72%;
+    --system-pink: 316 66% 79%;
+    --system-purple: 276 100% 87%;
+    --system-red: 4 90% 67%;
+    --system-teal: 173 100% 58%;
+    --system-yellow: 48 100% 75%;
+    --system-gray: 240 4% 46%;
+    --system-gray2: 240 3% 36%;
+    --system-gray3: 240 4% 26%;
+    --system-gray4: 240 4% 19%;
+    --system-gray5: 240 4% 15%;
+    --system-gray6: 240 4% 11%;
+
+    /* Apple Semantic Colors - Dark Mode */
+    --background: var(--system-gray6);
+    --foreground: 0 0% 95%;
+    --card: var(--system-gray5);
+    --card-foreground: 0 0% 95%;
+    --popover: var(--system-gray4);
+    --popover-foreground: 0 0% 95%;
+    --primary: var(--system-blue);
+    --primary-foreground: var(--system-gray6);
+    --secondary: var(--system-gray4);
+    --secondary-foreground: 0 0% 95%;
+    --muted: var(--system-gray4);
+    --muted-foreground: var(--system-gray);
+    --accent: var(--system-blue);
+    --accent-foreground: var(--system-gray6);
+    --destructive: var(--system-red);
+    --destructive-foreground: 0 0% 100%;
+    --border: var(--system-gray3);
+    --input: var(--system-gray4);
+    --ring: var(--system-blue);
+
+    /* Liquid Glass - Dark Mode */
+    --glass-opacity: 0.7;
+    --glass-blur: 24px;
+    --glass-saturation: 1.6;
+    --glass-brightness: 0.9;
+
+    /* Apple Elevation Shadows - Dark Mode */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.6), 0 4px 6px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.7), 0 8px 10px rgba(0, 0, 0, 0.4);
+    --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.8);
+
+    /* Legacy support */
+    --sidebar-background: rgba(28, 28, 30, 0.95);
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: var(--system-blue);
+    --sidebar-primary-foreground: var(--system-gray6);
+    --sidebar-accent: var(--system-gray4);
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: var(--system-gray3);
+    --sidebar-ring: var(--system-blue);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  html {
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'San Francisco', 'Helvetica Neue', Arial, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Apple Design System Components */
+@layer components {
+  /* Liquid Glass Effect */
+  .glass-effect {
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation)) brightness(var(--glass-brightness));
+    background: hsla(var(--background) / var(--glass-opacity));
+    border: 1px solid hsla(var(--border) / 0.2);
+  }
+  
+  /* Apple Button Styles */
+  .btn-apple {
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium;
+    @apply transition-all duration-200 ease-out;
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+    @apply active:scale-[0.98] active:transition-transform;
+  }
+  
+  .btn-filled {
+    @apply btn-apple bg-primary text-primary-foreground;
+    @apply shadow-sm hover:shadow-md;
+    @apply hover:bg-primary/90;
+  }
+  
+  .btn-tinted {
+    @apply btn-apple;
+    @apply bg-primary/10 text-primary;
+    @apply hover:bg-primary/15;
+  }
+  
+  .btn-plain {
+    @apply btn-apple;
+    @apply text-primary hover:bg-primary/10;
+  }
+  
+  /* Apple Card Style */
+  .card-apple {
+    @apply rounded-xl bg-card border border-border/50;
+    @apply shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+  
+  /* Apple Input Style */
+  .input-apple {
+    @apply w-full rounded-lg border border-border bg-input px-3 py-2;
+    @apply text-sm placeholder:text-muted-foreground;
+    @apply focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring;
+    @apply transition-colors duration-200;
+  }
+  
+  /* Apple Navigation Bar */
+  .navbar-apple {
+    @apply glass-effect sticky top-0 z-50 w-full;
+    @apply border-b border-border/10;
+  }
+  
+  /* Apple Sidebar */
+  .sidebar-apple {
+    @apply glass-effect h-[100%] w-full;
+    @apply border-r border-sidebar-border/20;
+  }
+  
+  /* Apple Text Styles */
+  .text-large-title {
+    @apply text-4xl font-bold leading-tight tracking-tight;
+  }
+  
+  .text-title-1 {
+    @apply text-3xl font-bold leading-tight;
+  }
+  
+  .text-title-2 {
+    @apply text-2xl font-bold leading-tight;
+  }
+  
+  .text-title-3 {
+    @apply text-xl font-semibold leading-tight;
+  }
+  
+  .text-headline {
+    @apply text-lg font-semibold leading-tight;
+  }
+  
+  .text-body {
+    @apply text-base leading-relaxed;
+  }
+  
+  .text-callout {
+    @apply text-base font-medium leading-relaxed;
+  }
+  
+  .text-subheadline {
+    @apply text-sm font-medium leading-normal;
+  }
+  
+  .text-footnote {
+    @apply text-sm leading-normal;
+  }
+  
+  .text-caption-1 {
+    @apply text-xs font-medium leading-normal;
+  }
+  
+  .text-caption-2 {
+    @apply text-xs leading-normal;
+  }
+}
