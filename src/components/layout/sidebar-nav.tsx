@@ -46,6 +46,11 @@ export function SidebarNav() {
           href: '/dashboard/nodal-modules/wellbore-design',
           icon: Drill,
         },
+        {
+          title: 'Nodal Analysis',
+          href: '/dashboard/nodal-modules/nodal-analysis',
+          icon: Thermometer,
+        },
       ],
     },
     {

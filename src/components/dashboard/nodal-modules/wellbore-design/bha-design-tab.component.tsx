@@ -184,7 +184,7 @@ export const BHADesignTab: FC<BHADesignTabProps> = ({ nodalColors }) => {
                     handleDepthUpdate();
                   }
                 }}
-                className="w-20 h-8"
+                className="w-32 h-8"
               />
             </div>
 

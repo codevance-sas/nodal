@@ -1,9 +1,17 @@
-import { Box, Button, Group, NumberInput, TextInput } from '@mantine/core';
+import {
+  Box,
+  Button,
+  Group,
+  MantineProvider,
+  NumberInput,
+  TextInput,
+} from '@mantine/core';
 import {
   MantineReactTable,
   type MRT_ColumnDef,
   type MRT_Row,
 } from 'mantine-react-table';
+import { useTheme } from 'next-themes';
 import { nanoid } from 'nanoid';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -60,6 +68,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
   setRows,
   validate,
 }) => {
+  const { theme } = useTheme();
   const [drafts, setDrafts] = useState<Map<string, Partial<BhaRowData>>>(
     new Map()
   );
@@ -579,6 +588,41 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
     [drafts, rows]
   );
 
+  // Memoized input styles based on theme
+  const getInputStyles = useMemo(() => {
+    const isLight = theme === 'light';
+
+    return (hasError: boolean) => ({
+      input: {
+        backgroundColor: isLight ? '#ffffff' : 'var(--mantine-color-dark-7)',
+        borderColor: hasError
+          ? '#ef4444'
+          : isLight
+          ? 'var(--mantine-color-gray-3)'
+          : 'var(--mantine-color-dark-4)',
+        color: isLight
+          ? 'var(--mantine-color-dark-9)'
+          : 'var(--mantine-color-gray-0)',
+        fontSize: '14px',
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        borderRadius: '8px',
+        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+        '&:focus': {
+          borderColor: '#3B82F6',
+          boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
+          backgroundColor: isLight ? '#f8f9fa' : 'var(--mantine-color-dark-6)',
+        },
+        '&:hover': {
+          borderColor: isLight
+            ? 'var(--mantine-color-gray-4)'
+            : 'var(--mantine-color-dark-3)',
+          backgroundColor: isLight ? '#f8f9fa' : 'var(--mantine-color-dark-6)',
+        },
+      },
+    });
+  }, [theme]);
+
   // Columns definition with enhanced validation feedback
   const columns: MRT_ColumnDef<BhaRowData>[] = [
     {
@@ -595,6 +639,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
           }}
         />
       ),
+      enableSorting: false,
       size: 25,
     },
     {
@@ -628,6 +673,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
           </SelectContent>
         </Select>
       ),
+      enableSorting: false,
     },
     {
       accessorKey: 'top',
@@ -643,31 +689,10 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
           onKeyDown={e => handleKeyDown(e, row.original.id, 'top')}
           precision={2}
           error={hasFieldError(row.original.id, 'top')}
-          styles={{
-            input: {
-              backgroundColor: 'var(--mantine-color-dark-7)',
-              borderColor: hasFieldError(row.original.id, 'top')
-                ? '#ef4444'
-                : 'var(--mantine-color-dark-4)',
-              color: 'var(--mantine-color-gray-0)',
-              fontSize: '14px',
-              fontFamily:
-                '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              borderRadius: '8px',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:focus': {
-                borderColor: '#3B82F6',
-                boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
-                backgroundColor: 'var(--mantine-color-dark-6)',
-              },
-              '&:hover': {
-                borderColor: 'var(--mantine-color-dark-3)',
-                backgroundColor: 'var(--mantine-color-dark-6)',
-              },
-            },
-          }}
+          styles={getInputStyles(hasFieldError(row.original.id, 'top'))}
         />
       ),
+      enableSorting: false,
     },
     {
       accessorKey: 'count',
@@ -685,29 +710,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
           onKeyDown={e => handleKeyDown(e, row.original.id, 'count')}
           precision={0}
           error={hasFieldError(row.original.id, 'count')}
-          styles={{
-            input: {
-              backgroundColor: 'var(--mantine-color-dark-7)',
-              borderColor: hasFieldError(row.original.id, 'count')
-                ? '#ef4444'
-                : 'var(--mantine-color-dark-4)',
-              color: 'var(--mantine-color-gray-0)',
-              fontSize: '14px',
-              fontFamily:
-                '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              borderRadius: '8px',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:focus': {
-                borderColor: '#3B82F6',
-                boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
-                backgroundColor: 'var(--mantine-color-dark-6)',
-              },
-              '&:hover': {
-                borderColor: 'var(--mantine-color-dark-3)',
-                backgroundColor: 'var(--mantine-color-dark-6)',
-              },
-            },
-          }}
+          styles={getInputStyles(hasFieldError(row.original.id, 'count'))}
         />
       ),
     },
@@ -727,31 +730,10 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
           onKeyDown={e => handleKeyDown(e, row.original.id, 'length')}
           precision={2}
           error={hasFieldError(row.original.id, 'length')}
-          styles={{
-            input: {
-              backgroundColor: 'var(--mantine-color-dark-7)',
-              borderColor: hasFieldError(row.original.id, 'length')
-                ? '#ef4444'
-                : 'var(--mantine-color-dark-4)',
-              color: 'var(--mantine-color-gray-0)',
-              fontSize: '14px',
-              fontFamily:
-                '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              borderRadius: '8px',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:focus': {
-                borderColor: '#3B82F6',
-                boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
-                backgroundColor: 'var(--mantine-color-dark-6)',
-              },
-              '&:hover': {
-                borderColor: 'var(--mantine-color-dark-3)',
-                backgroundColor: 'var(--mantine-color-dark-6)',
-              },
-            },
-          }}
+          styles={getInputStyles(hasFieldError(row.original.id, 'length'))}
         />
       ),
+      enableSorting: false,
     },
     {
       accessorKey: 'od',
@@ -767,31 +749,10 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
           onKeyDown={e => handleKeyDown(e, row.original.id, 'od')}
           precision={2}
           error={hasFieldError(row.original.id, 'od')}
-          styles={{
-            input: {
-              backgroundColor: 'var(--mantine-color-dark-7)',
-              borderColor: hasFieldError(row.original.id, 'od')
-                ? '#ef4444'
-                : 'var(--mantine-color-dark-4)',
-              color: 'var(--mantine-color-gray-0)',
-              fontSize: '14px',
-              fontFamily:
-                '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              borderRadius: '8px',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:focus': {
-                borderColor: '#3B82F6',
-                boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
-                backgroundColor: 'var(--mantine-color-dark-6)',
-              },
-              '&:hover': {
-                borderColor: 'var(--mantine-color-dark-3)',
-                backgroundColor: 'var(--mantine-color-dark-6)',
-              },
-            },
-          }}
+          styles={getInputStyles(hasFieldError(row.original.id, 'od'))}
         />
       ),
+      enableSorting: false,
     },
     {
       accessorKey: 'idVal',
@@ -809,31 +770,10 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
           onKeyDown={e => handleKeyDown(e, row.original.id, 'idVal')}
           precision={2}
           error={hasFieldError(row.original.id, 'idVal')}
-          styles={{
-            input: {
-              backgroundColor: 'var(--mantine-color-dark-7)',
-              borderColor: hasFieldError(row.original.id, 'idVal')
-                ? '#ef4444'
-                : 'var(--mantine-color-dark-4)',
-              color: 'var(--mantine-color-gray-0)',
-              fontSize: '14px',
-              fontFamily:
-                '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              borderRadius: '8px',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:focus': {
-                borderColor: '#3B82F6',
-                boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
-                backgroundColor: 'var(--mantine-color-dark-6)',
-              },
-              '&:hover': {
-                borderColor: 'var(--mantine-color-dark-3)',
-                backgroundColor: 'var(--mantine-color-dark-6)',
-              },
-            },
-          }}
+          styles={getInputStyles(hasFieldError(row.original.id, 'idVal'))}
         />
       ),
+      enableSorting: false,
     },
     {
       accessorKey: 'bottom',
@@ -851,31 +791,10 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
           onKeyDown={e => handleKeyDown(e, row.original.id, 'bottom')}
           precision={2}
           error={hasFieldError(row.original.id, 'bottom')}
-          styles={{
-            input: {
-              backgroundColor: 'var(--mantine-color-dark-7)',
-              borderColor: hasFieldError(row.original.id, 'bottom')
-                ? '#ef4444'
-                : 'var(--mantine-color-dark-4)',
-              color: 'var(--mantine-color-gray-0)',
-              fontSize: '14px',
-              fontFamily:
-                '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              borderRadius: '8px',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:focus': {
-                borderColor: '#3B82F6',
-                boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
-                backgroundColor: 'var(--mantine-color-dark-6)',
-              },
-              '&:hover': {
-                borderColor: 'var(--mantine-color-dark-3)',
-                backgroundColor: 'var(--mantine-color-dark-6)',
-              },
-            },
-          }}
+          styles={getInputStyles(hasFieldError(row.original.id, 'bottom'))}
         />
       ),
+      enableSorting: false,
     },
     {
       accessorKey: 'desc',
@@ -890,31 +809,10 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
           onFocus={() => handleFocus(row.original.id, 'desc')}
           onBlur={() => handleBlur(row.original.id, 'desc')}
           onKeyDown={e => handleKeyDown(e, row.original.id, 'desc')}
-          styles={{
-            input: {
-              backgroundColor: 'var(--mantine-color-dark-7)',
-              borderColor: hasFieldError(row.original.id, 'desc')
-                ? '#ef4444'
-                : 'var(--mantine-color-dark-4)',
-              color: 'var(--mantine-color-gray-0)',
-              fontSize: '14px',
-              fontFamily:
-                '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              borderRadius: '8px',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              '&:focus': {
-                borderColor: '#3B82F6',
-                boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
-                backgroundColor: 'var(--mantine-color-dark-6)',
-              },
-              '&:hover': {
-                borderColor: 'var(--mantine-color-dark-3)',
-                backgroundColor: 'var(--mantine-color-dark-6)',
-              },
-            },
-          }}
+          styles={getInputStyles(hasFieldError(row.original.id, 'desc'))}
         />
       ),
+      enableSorting: false,
     },
     {
       header: 'Actions',
@@ -938,7 +836,10 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
                   backgroundColor: '#ef4444',
                   color: 'white',
                   transform: 'translateY(-1px)',
-                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+                  boxShadow:
+                    theme === 'light'
+                      ? '0 4px 12px rgba(239, 68, 68, 0.2)'
+                      : '0 4px 12px rgba(239, 68, 68, 0.3)',
                 },
                 '&:active': {
                   transform: 'translateY(0)',
@@ -950,20 +851,21 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
           </Button>
         </Group>
       ),
+      enableSorting: false,
     },
-  ];
+  ].map(
+    column =>
+      ({
+        ...column,
+        enableSorting: false,
+        mantineTableHeadCellProps: {
+          align: 'center',
+        },
+      } as MRT_ColumnDef<BhaRowData>)
+  );
 
   return (
-    <div
-      className="w-full h-[100%] overflow-auto"
-      style={{
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        backgroundColor: 'var(--mantine-color-dark-8)',
-        borderRadius: '12px',
-        padding: '0px',
-      }}
-    >
+    <div className="w-full h-[100%] overflow-auto transition-colors duration-200 bg-background rounded-xl p-0">
       {/* Header Controls - shadcn/ui */}
       <div className="bg-card/50 backdrop-blur-sm rounded-lg border border-border/50 p-4 mb-4 transition-all duration-200">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -971,9 +873,9 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
           <div className="flex items-center gap-4">
             <div className="flex items-center space-x-2 bg-background/80 rounded-lg p-3 border border-border/50">
               <Calculator className="h-4 w-4 text-system-blue" />
-              <div className="space-y-1">
+              <div className="space-y-1 space-x-1">
                 <Label className="text-xs text-muted-foreground">
-                  Net {nameTable} Length [ft]
+                  Net {nameTable.charAt(0).toUpperCase() + nameTable.slice(1).toLowerCase()} Length [ft]
                 </Label>
                 <Badge variant="secondary" className="font-mono font-bold">
                   {calculateNetLength.toFixed(2)}
@@ -1006,178 +908,55 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
         </div>
       </div>
 
-      <div
-        className="backdrop-blur-sm rounded-xl overflow-hidden shadow-xl"
-        style={{
-          backgroundColor: 'var(--mantine-color-dark-7)',
-          border: '1px solid var(--mantine-color-dark-4)',
-          boxShadow:
-            '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)',
-        }}
-      >
-        <MantineReactTable
-          autoResetPageIndex={false}
-          columns={columns}
-          data={rows}
-          enableRowOrdering
-          enableTopToolbar={false}
-          initialState={{ density: 'xs' }}
-          mantineRowDragHandleProps={({ table }) => ({
-            onDragEnd: () => {
-              const { draggingRow, hoveredRow } = table.getState();
-              if (draggingRow && hoveredRow) {
-                setActiveFields(new Set());
-                debounceTimers.current.forEach(timer => clearTimeout(timer));
-                debounceTimers.current.clear();
+      <div className="backdrop-blur-sm rounded-xl overflow-hidden shadow-xl transition-colors duration-200 bg-card border border-border">
+        <MantineProvider
+          theme={{ colorScheme: theme === 'dark' ? 'dark' : 'light' }}
+        >
+          <MantineReactTable
+            autoResetPageIndex={false}
+            columns={columns}
+            data={rows}
+            enableRowOrdering
+            enableTopToolbar={false}
+            enableColumnActions={false}
+            initialState={{ density: 'xs' }}
+            mantineRowDragHandleProps={({ table }) => ({
+              onDragEnd: () => {
+                const { draggingRow, hoveredRow } = table.getState();
+                if (draggingRow && hoveredRow) {
+                  setActiveFields(new Set());
+                  debounceTimers.current.forEach(timer => clearTimeout(timer));
+                  debounceTimers.current.clear();
 
-                const newData = [...rows];
-                newData.splice(
-                  (hoveredRow as MRT_Row<BhaRowData>).index,
-                  0,
-                  newData.splice(draggingRow.index, 1)[0]
-                );
-                const recalc = recalcTopBtm({
-                  rows: newData,
-                  initialTop,
-                  drafts: new Map(),
-                });
-                const errors = validate(recalc);
-                if (errors.length > 0) {
-                  setError(errors.join('; '));
-                } else {
-                  setRows(recalc);
-                  setError(null);
+                  const newData = [...rows];
+                  newData.splice(
+                    (hoveredRow as MRT_Row<BhaRowData>).index,
+                    0,
+                    newData.splice(draggingRow.index, 1)[0]
+                  );
+                  const recalc = recalcTopBtm({
+                    rows: newData,
+                    initialTop,
+                    drafts: new Map(),
+                  });
+                  const errors = validate(recalc);
+                  if (errors.length > 0) {
+                    setError(errors.join('; '));
+                  } else {
+                    setRows(recalc);
+                    setError(null);
+                  }
+                  updateValidationState(recalc);
                 }
-                updateValidationState(recalc);
-              }
-            },
-          })}
-          mantineTableProps={{
-            highlightOnHover: true,
-            withColumnBorders: true,
-            striped: false,
-            sx: {
-              fontFamily:
-                '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              backgroundColor: '#1a1b23',
-              color: '#9ca3af',
-              border: '1px solid #373a40',
-              borderRadius: '8px',
-              overflow: 'hidden',
-              '& thead': {
-                backgroundColor: '#141518',
               },
-              '& thead th': {
-                backgroundColor: '#141518 !important',
-                color: '#9ca3af !important',
-                borderColor: '#373a40 !important',
-                fontWeight: 600,
-                fontSize: '13px',
-                fontFamily:
-                  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              },
-              '& tbody': {
-                backgroundColor: '#1a1b23',
-              },
-              '& tbody td': {
-                backgroundColor: '#1a1b23 !important',
-                color: '#d1d5db !important',
-                borderColor: '#373a40 !important',
-                fontSize: '14px',
-                fontFamily:
-                  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              },
-              '& tbody tr:hover td': {
-                backgroundColor: 'rgba(59, 130, 246, 0.1) !important',
-              },
-            },
-          }}
-          mantineBottomToolbarProps={{
-            sx: {
-              backgroundColor: '#1a1b23',
-              borderTop: '1px solid #373a40',
-              color: '#6b7280',
-              fontFamily:
-                '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              '& .mantine-Text-root': {
-                color: '#6b7280 !important',
-                fontSize: '14px',
-                fontFamily:
-                  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              },
-              '& .mantine-Select-root': {
-                '& .mantine-Select-input': {
-                  backgroundColor: '#141518',
-                  borderColor: '#373a40',
-                  color: '#9ca3af',
-                  fontFamily:
-                    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                  '&:focus': {
-                    borderColor: '#3B82F6',
-                    boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
-                  },
-                },
-                '& .mantine-Select-dropdown': {
-                  backgroundColor: '#141518',
-                  borderColor: '#373a40',
-                  '& .mantine-Select-item': {
-                    color: '#9ca3af',
-                    '&:hover': {
-                      backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    },
-                    '&[data-selected]': {
-                      backgroundColor: '#3B82F6',
-                      color: 'white',
-                    },
-                  },
-                },
-              },
-              '& .mantine-Button-root': {
-                backgroundColor: 'transparent',
-                border: '1px solid #373a40',
-                color: '#9ca3af',
-                fontFamily:
-                  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover': {
-                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                  borderColor: '#3B82F6',
-                  color: '#3B82F6',
-                },
-                '&:disabled': {
-                  backgroundColor: 'transparent',
-                  borderColor: '#374151',
-                  color: '#4b5563',
-                  cursor: 'not-allowed',
-                },
-              },
-              '& .mantine-Pagination-control': {
-                backgroundColor: 'transparent',
-                border: '1px solid #373a40',
-                color: '#9ca3af',
-                fontFamily:
-                  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover': {
-                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                  borderColor: '#3B82F6',
-                  color: '#3B82F6',
-                },
-                '&[data-active]': {
-                  backgroundColor: '#3B82F6',
-                  borderColor: '#3B82F6',
-                  color: 'white',
-                },
-                '&:disabled': {
-                  backgroundColor: 'transparent',
-                  borderColor: '#374151',
-                  color: '#4b5563',
-                  cursor: 'not-allowed',
-                },
-              },
-            },
-          }}
-        />
+            })}
+            mantineTableProps={{
+              highlightOnHover: true,
+              withColumnBorders: true,
+              striped: false,
+            }}
+          />
+        </MantineProvider>
       </div>
     </div>
   );

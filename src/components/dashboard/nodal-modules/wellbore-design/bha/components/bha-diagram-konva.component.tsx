@@ -2,6 +2,7 @@
 import { casingTypeOptions } from '@/core/nodal-modules/wellbore-design/constants/bha-type-options.constant';
 import { useBhaStore } from '@/store/nodal-modules/wellbore-design/use-bha.store';
 import type { BhaRowData } from '@/core/nodal-modules/wellbore-design/types/bha-builder.type';
+import { useTheme } from 'next-themes';
 import {
   useCallback,
   useEffect,
@@ -18,32 +19,73 @@ export interface BhaDiagramKonvaProps {
   exaggeration?: number;
 }
 
-const AppleColors = {
+// Interfaz común para paletas de colores
+interface AppleColorsType {
+  systemBlue: string;
+  systemRed: string;
+  systemGreen: string;
+  systemOrange: string;
+  background: string;
+  secondaryBackground: string;
+  casing: string;
+  bha: string;
+  tubing: string;
+  nodalPoint: string;
+  nodalPointGlow: string;
+  gridLine: string;
+  borderLine: string;
+  accentLine: string;
+  textPrimary: string;
+  textSecondary: string;
+  textTertiary: string;
+  tooltipBackground: string;
+  tooltipText: string;
+  tooltipBorder: string;
+}
+
+// Apple Design System Colors - Light Mode
+const AppleColorsLight: AppleColorsType = {
   systemBlue: '#3B82F6',
   systemRed: '#EF4444',
   systemGreen: '#10B981',
   systemOrange: '#F59E0B',
 
-  gray1: '#F8F9FA',
-  gray2: '#E9ECEF',
-  gray3: '#DEE2E6',
-  gray4: '#CED4DA',
-  gray5: '#ADB5BD',
-  gray6: '#6C757D',
-  gray7: '#495057',
-  gray8: '#343A40',
-  gray9: '#212529',
+  background: '#FFFFFF',
+  secondaryBackground: '#F8F9FA',
 
-  darkPrimary: '#FFFFFF',
-  darkSecondary: '#D1D5DB',
-  darkTertiary: '#9CA3AF',
-  darkQuaternary: '#6B7280',
-  darkBackground: '#111827',
-  darkSecondaryBackground: '#1F2937',
+  casing: '#8B9DC3',
+  bha: '#7C9AD9',
+  tubing: '#9CA3AF',
 
-  casing: '#94A3B8',
-  bha: '#60A5FA',
-  tubing: '#374151',
+  nodalPoint: '#DC2626',
+  nodalPointGlow: 'rgba(220, 38, 38, 0.2)',
+
+  gridLine: '#E5E7EB',
+  borderLine: '#D1D5DB',
+  accentLine: '#3B82F6',
+
+  textPrimary: '#111827',
+  textSecondary: '#374151',
+  textTertiary: '#6B7280',
+
+  tooltipBackground: 'rgba(255, 255, 255, 0.95)',
+  tooltipText: '#111827',
+  tooltipBorder: '#D1D5DB',
+};
+
+// Apple Design System Colors - Dark Mode
+const AppleColorsDark: AppleColorsType = {
+  systemBlue: '#60A5FA',
+  systemRed: '#EF4444',
+  systemGreen: '#10B981',
+  systemOrange: '#F59E0B',
+
+  background: '#111827',
+  secondaryBackground: '#1F2937',
+
+  casing: '#6B7A99',
+  bha: '#5B7BB8',
+  tubing: '#6B7280',
 
   nodalPoint: '#DC2626',
   nodalPointGlow: 'rgba(220, 38, 38, 0.3)',
@@ -59,13 +101,13 @@ const AppleColors = {
   tooltipBackground: 'rgba(17, 24, 39, 0.95)',
   tooltipText: '#F9FAFB',
   tooltipBorder: '#4B5563',
-} as const;
+};
 
-const getColorFromType = (type: string): string => {
+const getColorFromType = (type: string, colors: AppleColorsType): string => {
   if (casingTypeOptions.includes(type)) {
-    return AppleColors.casing;
+    return colors.casing;
   } else {
-    return AppleColors.bha;
+    return colors.bha;
   }
 };
 
@@ -77,8 +119,13 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
   showNodalPoint,
   onNodalPointDepth,
 }) => {
+  const { theme } = useTheme();
   const { bhaRows, casingRows, initialTop, nodalDepth, setNodalDepth } =
     useBhaStore();
+
+  const AppleColors = useMemo(() => {
+    return theme === 'dark' ? AppleColorsDark : AppleColorsLight;
+  }, [theme]);
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<{ width: number; height: number }>({
     width: 0,
@@ -167,11 +214,12 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
   return (
     <div
       ref={containerRef}
-      className="w-full h-[100%] bg-background rounded-lg border border-border/30 overflow-hidden"
+      className="w-full h-[100%] bg-background rounded-lg border border-border/30 overflow-hidden transition-colors duration-200"
       style={{
         fontFamily:
           '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         minHeight: '650px',
+        backgroundColor: AppleColors.background,
       }}
     >
       {size.width > 0 && size.height > 0 && (
@@ -181,7 +229,7 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
           style={{
             width: '100%',
             height: '100%',
-            background: AppleColors.darkBackground,
+            background: AppleColors.background,
           }}
         >
           <Layer>
@@ -194,7 +242,7 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
               const outerW = Math.max((odW - idW) / 2, 2);
               const innerX = centerX - idW / 2;
 
-              const componentColor = getColorFromType(row.type);
+              const componentColor = getColorFromType(row.type, AppleColors);
               const isLastComponent = index === allRows.length - 1;
 
               return (
