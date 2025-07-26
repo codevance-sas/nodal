@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useMemo } from 'react';
 import { Check } from 'lucide-react';
 import { useAnalysisStore } from '@/store/nodal-modules/nodal-analysis/use-nodal-analysis.store';
 import type { SectionAnalysisKey } from '@/core/nodal-modules/nodal-analysis/types/nodal-analysis.types';
 import { cn } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 const tabs = [
   { key: 'ipr', label: 'Inflow Performance', shortLabel: 'IPR' },
@@ -242,7 +244,15 @@ const InfoBox: React.FC<{ activeSection: SectionAnalysisKey }> = ({
   );
 };
 
-export const NodalAnalysisStepper: React.FC = () => {
+interface NodalAnalysisStepperProps {
+  showBHADesign: boolean;
+  setShowBHADesign: Dispatch<SetStateAction<boolean>>;
+}
+
+export const NodalAnalysisStepper: React.FC<NodalAnalysisStepperProps> = ({
+  showBHADesign,
+  setShowBHADesign,
+}) => {
   const { activeSection, setActiveSection, completeness, iprInputs } =
     useAnalysisStore();
 
@@ -288,23 +298,55 @@ export const NodalAnalysisStepper: React.FC = () => {
         'dark:from-gray-900/70 dark:via-gray-850/80 dark:to-gray-900/70',
         'rounded-3xl border border-gray-200/50 dark:border-gray-700/40',
         'shadow-lg shadow-gray-200/30 dark:shadow-gray-900/20',
-        'backdrop-blur-sm'
+        'backdrop-blur-sm',
+        'pt-16'
       )}
     >
       {/* Main chevron container with Apple styling */}
       <div
         className={cn(
-          'flex items-stretch w-full h-16',
+          'relative flex items-stretch w-full h-16',
           'bg-gradient-to-b from-gray-50/80 via-gray-100/60 to-gray-150/80',
           'dark:from-gray-800/60 dark:via-gray-750/80 dark:to-gray-800/60',
           'rounded-2xl border border-gray-200/30 dark:border-gray-700/30',
           'shadow-inner shadow-gray-100/40 dark:shadow-gray-800/40',
-          'backdrop-blur-sm overflow-visible',
-          'relative'
+          'backdrop-blur-sm overflow-visible'
         )}
       >
         {/* Subtle background texture */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-100/10 to-transparent dark:via-gray-700/10 rounded-2xl" />
+
+        {/* BHA Design Switch - positioned absolutely in top-right */}
+        <div className="absolute -top-14 z-40">
+          <div
+            className={cn(
+              'flex items-center space-x-3 px-4 py-2 rounded-xl',
+              'bg-gradient-to-r from-white/90 via-white/80 to-gray-50/90',
+              'dark:from-gray-800/90 dark:via-gray-750/80 dark:to-gray-800/90',
+              'border border-gray-200/40 dark:border-gray-600/40',
+              'shadow-lg shadow-gray-200/30 dark:shadow-gray-900/40',
+              'backdrop-blur-sm',
+              'transition-all duration-300 hover:shadow-xl hover:shadow-gray-200/40',
+              'dark:hover:shadow-gray-900/50'
+            )}
+          >
+            <Switch
+              id="bha-design-switch"
+              checked={showBHADesign}
+              onCheckedChange={setShowBHADesign}
+            />
+            <Label
+              htmlFor="bha-design-switch"
+              className={cn(
+                'text-sm font-medium whitespace-nowrap',
+                'text-gray-700 dark:text-gray-200',
+                'transition-colors duration-200'
+              )}
+            >
+              Show BHA Design
+            </Label>
+          </div>
+        </div>
 
         {tabStates.map((tab, index) => (
           <ChevronTab

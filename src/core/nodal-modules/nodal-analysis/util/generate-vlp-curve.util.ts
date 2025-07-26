@@ -2,7 +2,7 @@ export function generateVlpCurve(
   result: any,
   oilRate: number
 ): Array<{ rate: number; pressure: number }> {
-  if (!result.pressure_profile) {
+  if (!result?.pressure_profile) {
     return [];
   }
   const multipliers = [

@@ -1,7 +1,16 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  serverExternalPackages: [
+    'canvas',
+    'konva',
+    'react-konva',
+    'plotly.js',
+    'react-plotly.js',
+    '@plotly/d3',
+    'd3',
+  ],
+
   typescript: {
     ignoreBuildErrors: true,
   },

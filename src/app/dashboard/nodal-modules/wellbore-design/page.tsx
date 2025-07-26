@@ -3,3 +3,6 @@ import { WellboreDesignModule } from '@/components/dashboard/nodal-modules/wellb
 export default function WellboreDesignPage() {
   return <WellboreDesignModule />;
 }
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';

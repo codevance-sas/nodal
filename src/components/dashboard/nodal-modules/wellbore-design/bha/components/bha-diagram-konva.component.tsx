@@ -19,7 +19,6 @@ export interface BhaDiagramKonvaProps {
   exaggeration?: number;
 }
 
-// Interfaz común para paletas de colores
 interface AppleColorsType {
   systemBlue: string;
   systemRed: string;
@@ -43,7 +42,6 @@ interface AppleColorsType {
   tooltipBorder: string;
 }
 
-// Apple Design System Colors - Light Mode
 const AppleColorsLight: AppleColorsType = {
   systemBlue: '#3B82F6',
   systemRed: '#EF4444',
@@ -73,7 +71,6 @@ const AppleColorsLight: AppleColorsType = {
   tooltipBorder: '#D1D5DB',
 };
 
-// Apple Design System Colors - Dark Mode
 const AppleColorsDark: AppleColorsType = {
   systemBlue: '#60A5FA',
   systemRed: '#EF4444',

@@ -3,3 +3,6 @@ import { NodalAnalysisContainer } from '@/components/dashboard/nodal-modules/nod
 export default function NodalAnalysisPage() {
   return <NodalAnalysisContainer />;
 }
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';

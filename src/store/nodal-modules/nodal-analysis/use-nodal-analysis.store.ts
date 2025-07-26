@@ -257,6 +257,7 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
         fluidProperties,
         pvtCurveData: curvesData,
         completeness: { ...state.completeness, pvt: true },
+        activeSection: 'hydraulics',
       }));
 
       return result;
@@ -349,6 +350,7 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
           ...state.completeness,
           hydraulics: true,
           results: true,
+          activeSection: 'results',
         },
       }));
     } catch (err: any) {

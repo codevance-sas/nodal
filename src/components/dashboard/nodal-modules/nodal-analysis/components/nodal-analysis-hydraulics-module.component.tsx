@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Card,
@@ -8,8 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
@@ -29,121 +26,7 @@ import {
 import { CorrelationSelector } from './correlation-selector.component';
 import type { Segments } from '@/core/nodal-modules/nodal-analysis/util/merge-bha-and-casing-rows.util';
 import { SurveyDataUploader } from './survey-data-uploader.component';
-
-interface InputFieldProps {
-  name: string;
-  label: string;
-  value: number;
-  unit?: string;
-  onChange: (name: string, value: number) => void;
-  error?: string;
-  disabled?: boolean;
-  readOnly?: boolean;
-}
-
-const InputField: React.FC<InputFieldProps> = ({
-  name,
-  label,
-  value,
-  unit,
-  onChange,
-  error,
-  disabled = false,
-  readOnly = false,
-}) => {
-  const [focused, setFocused] = useState(false);
-  const [inputValue, setInputValue] = useState(value.toString());
-
-  useEffect(() => {
-    setInputValue(value.toString());
-  }, [value]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setInputValue(newValue);
-
-    const num = parseFloat(newValue);
-    onChange(name, isNaN(num) ? 0 : num);
-  };
-
-  const hasValue = value > 0;
-  const shouldShowFloatingLabel = focused || hasValue || inputValue !== '';
-
-  return (
-    <div className="space-y-2">
-      <div className="relative group">
-        <Label
-          htmlFor={name}
-          className={cn(
-            'absolute left-3 transition-all duration-300 ease-apple pointer-events-none',
-            'text-muted-foreground font-medium',
-            shouldShowFloatingLabel
-              ? 'top-2 text-xs text-system-blue dark:text-system-blue scale-90 origin-left'
-              : 'top-1/2 -translate-y-1/2 text-sm'
-          )}
-        >
-          {label}
-          {unit && shouldShowFloatingLabel && (
-            <span className="text-muted-foreground/70 ml-1">({unit})</span>
-          )}
-        </Label>
-
-        <Input
-          id={name}
-          name={name}
-          type="number"
-          value={inputValue}
-          onChange={handleChange}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          disabled={disabled}
-          readOnly={readOnly}
-          className={cn(
-            'h-12 pt-6 pb-2 px-3 transition-all duration-300 ease-apple',
-            'bg-background border border-border/60 shadow-sm',
-            'hover:border-border/80 hover:bg-muted/30 hover:shadow-md hover:shadow-black/5',
-            'focus:border-system-blue focus:bg-background focus:shadow-lg focus:shadow-system-blue/10',
-            'focus:ring-2 focus:ring-system-blue/30',
-            'placeholder:text-transparent',
-            error &&
-              'border-system-red focus:border-system-red focus:ring-system-red/30',
-            hasValue && !error && 'border-system-green/60 bg-system-green/5',
-            (disabled || readOnly) &&
-              'opacity-60 cursor-not-allowed bg-muted/30',
-            'dark:bg-background/80 dark:backdrop-blur-sm dark:border-border/40',
-            'dark:hover:border-border/60 dark:hover:bg-background/90',
-            'dark:focus:border-system-blue dark:focus:bg-background dark:focus:ring-system-blue/20'
-          )}
-          placeholder={label}
-        />
-
-        {unit && !shouldShowFloatingLabel && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground/70">
-            {unit}
-          </span>
-        )}
-
-        {hasValue && !error && !disabled && (
-          <div className="absolute right-3 top-2">
-            <CheckCircle className="h-3 w-3 text-system-green" />
-          </div>
-        )}
-
-        {error && (
-          <div className="absolute right-3 top-2">
-            <AlertTriangle className="h-3 w-3 text-system-red" />
-          </div>
-        )}
-      </div>
-
-      {error && (
-        <p className="text-xs text-system-red font-medium animate-in slide-in-from-top-1 duration-200">
-          {error}
-        </p>
-      )}
-    </div>
-  );
-};
+import { InputField } from '@/components/custom/input-field/input-field.component';
 
 interface HydraulicsModuleProps {
   segments: Segments[];
@@ -475,16 +358,6 @@ export const NodalAnalysisHydraulicsModule: React.FC<HydraulicsModuleProps> = ({
                 />
               </div>
 
-              {/* Survey Data Section for Beggs-Brill */}
-              {isBeggsbrillSelected && (
-                <div className="space-y-4">
-                  <Separator />
-                  <SurveyDataUploader
-                    onDataChange={isValid => setSurveyDataValid(isValid)}
-                  />
-                </div>
-              )}
-
               {/* Validation Alert for Beggs-Brill */}
               {!canCalculate && (
                 <Alert
@@ -529,21 +402,56 @@ export const NodalAnalysisHydraulicsModule: React.FC<HydraulicsModuleProps> = ({
                   <Gauge className="h-5 w-5 text-system-purple" />
                   Wellbore & Reservoir
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {wellboreFields.map(field => (
-                    <InputField
-                      key={field.name}
-                      name={field.name}
-                      label={field.label}
-                      unit={field.unit}
-                      value={formData[field.name as keyof typeof formData] || 0}
-                      onChange={handleChange}
-                      error={errors[field.name]}
-                      readOnly={field.readOnly}
-                      disabled={field.readOnly}
-                    />
-                  ))}
-                </div>
+
+                {isBeggsbrillSelected ? (
+                  // ✅ Modo con uploader activo — 2 columnas: inputs y uploader
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Columna izquierda: Inputs con 2 por fila */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      {wellboreFields.map(field => (
+                        <InputField
+                          key={field.name}
+                          name={field.name}
+                          label={field.label}
+                          unit={field.unit}
+                          value={
+                            formData[field.name as keyof typeof formData] || 0
+                          }
+                          onChange={handleChange}
+                          error={errors[field.name]}
+                          readOnly={field.readOnly}
+                          disabled={field.readOnly}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Columna derecha: Survey uploader */}
+                    <div className="space-y-4">
+                      <SurveyDataUploader
+                        onDataChange={isValid => setSurveyDataValid(isValid)}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  // ✅ Modo normal sin uploader
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {wellboreFields.map(field => (
+                      <InputField
+                        key={field.name}
+                        name={field.name}
+                        label={field.label}
+                        unit={field.unit}
+                        value={
+                          formData[field.name as keyof typeof formData] || 0
+                        }
+                        onChange={handleChange}
+                        error={errors[field.name]}
+                        readOnly={field.readOnly}
+                        disabled={field.readOnly}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Derived Parameters */}

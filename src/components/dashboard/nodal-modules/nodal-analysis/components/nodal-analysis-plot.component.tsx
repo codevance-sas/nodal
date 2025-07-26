@@ -21,10 +21,10 @@ export const NodalAnalysisPlot: React.FC<NodalAnalysisPlotProps> = ({
   operatingPoint,
 }) => {
   const validIprData = iprData.filter(
-    (d) => !isNaN(d.rate) && !isNaN(d.pressure)
+    d => !isNaN(d.rate) && !isNaN(d.pressure)
   );
   const validVlpData = vlpData.filter(
-    (d) => !isNaN(d.rate) && !isNaN(d.pressure)
+    d => !isNaN(d.rate) && !isNaN(d.pressure)
   );
 
   if (validIprData.length === 0 || validVlpData.length === 0) {
@@ -50,15 +50,17 @@ export const NodalAnalysisPlot: React.FC<NodalAnalysisPlotProps> = ({
   }
 
   const maxRate = Math.max(
-    ...validIprData.map((d) => d.rate),
-    ...validVlpData.map((d) => d.rate),
+    ...validIprData.map(d => d.rate),
+    ...validVlpData.map(d => d.rate),
     operatingPoint && !isNaN(operatingPoint.rate) ? operatingPoint.rate : 0
   );
 
   const maxPressure = Math.max(
-    ...validIprData.map((d) => d.pressure),
-    ...validVlpData.map((d) => d.pressure),
-    operatingPoint && !isNaN(operatingPoint.pressure) ? operatingPoint.pressure : 0
+    ...validIprData.map(d => d.pressure),
+    ...validVlpData.map(d => d.pressure),
+    operatingPoint && !isNaN(operatingPoint.pressure)
+      ? operatingPoint.pressure
+      : 0
   );
 
   const traces: any[] = [
@@ -71,9 +73,10 @@ export const NodalAnalysisPlot: React.FC<NodalAnalysisPlotProps> = ({
       line: {
         color: '#007AFF', // system-blue
         width: 4,
-        shape: 'spline'
+        shape: 'spline',
       },
-      hovertemplate: 'Rate: %{x:.0f} BOPD<br>Pressure: %{y:.0f} psia<br>IPR Curve<extra></extra>'
+      hovertemplate:
+        'Rate: %{x:.0f} BOPD<br>Pressure: %{y:.0f} psia<br>IPR Curve<extra></extra>',
     },
     {
       x: validVlpData.map(d => d.rate),
@@ -84,13 +87,18 @@ export const NodalAnalysisPlot: React.FC<NodalAnalysisPlotProps> = ({
       line: {
         color: '#FF3B30', // system-red
         width: 4,
-        shape: 'spline'
+        shape: 'spline',
       },
-      hovertemplate: 'Rate: %{x:.0f} BOPD<br>Pressure: %{y:.0f} psia<br>VLP Curve<extra></extra>'
-    }
+      hovertemplate:
+        'Rate: %{x:.0f} BOPD<br>Pressure: %{y:.0f} psia<br>VLP Curve<extra></extra>',
+    },
   ];
 
-  if (operatingPoint && !isNaN(operatingPoint.rate) && !isNaN(operatingPoint.pressure)) {
+  if (
+    operatingPoint &&
+    !isNaN(operatingPoint.rate) &&
+    !isNaN(operatingPoint.pressure)
+  ) {
     traces.push({
       x: [operatingPoint.rate],
       y: [operatingPoint.pressure],
@@ -103,26 +111,27 @@ export const NodalAnalysisPlot: React.FC<NodalAnalysisPlotProps> = ({
         symbol: 'diamond',
         line: {
           color: '#ffffff',
-          width: 3
-        }
+          width: 3,
+        },
       },
-      hovertemplate: 'Operating Point<br>Rate: %{x:.0f} BOPD<br>Pressure: %{y:.0f} psia<extra></extra>'
+      hovertemplate:
+        'Operating Point<br>Rate: %{x:.0f} BOPD<br>Pressure: %{y:.0f} psia<extra></extra>',
     });
   }
 
   const layout: any = {
     title: {
       text: '',
-      font: { size: 0 }
+      font: { size: 0 },
     },
     xaxis: {
       title: {
         text: 'Flow Rate (BOPD)',
-        font: { 
-          size: 14, 
+        font: {
+          size: 14,
           color: 'var(--foreground)',
-          family: 'SF Pro Display, -apple-system, system-ui, sans-serif'
-        }
+          family: 'SF Pro Display, -apple-system, system-ui, sans-serif',
+        },
       },
       gridcolor: 'var(--border)',
       zeroline: false,
@@ -131,17 +140,17 @@ export const NodalAnalysisPlot: React.FC<NodalAnalysisPlotProps> = ({
       gridwidth: 1,
       tickfont: {
         color: 'var(--muted-foreground)',
-        size: 12
-      }
+        size: 12,
+      },
     },
     yaxis: {
       title: {
         text: 'Pressure (psia)',
-        font: { 
-          size: 14, 
+        font: {
+          size: 14,
           color: 'var(--foreground)',
-          family: 'SF Pro Display, -apple-system, system-ui, sans-serif'
-        }
+          family: 'SF Pro Display, -apple-system, system-ui, sans-serif',
+        },
       },
       gridcolor: 'var(--border)',
       zeroline: false,
@@ -150,8 +159,8 @@ export const NodalAnalysisPlot: React.FC<NodalAnalysisPlotProps> = ({
       gridwidth: 1,
       tickfont: {
         color: 'var(--muted-foreground)',
-        size: 12
-      }
+        size: 12,
+      },
     },
     plot_bgcolor: 'transparent',
     paper_bgcolor: 'transparent',
@@ -165,8 +174,8 @@ export const NodalAnalysisPlot: React.FC<NodalAnalysisPlotProps> = ({
       font: {
         color: 'var(--foreground)',
         size: 12,
-        family: 'SF Pro Display, -apple-system, system-ui, sans-serif'
-      }
+        family: 'SF Pro Display, -apple-system, system-ui, sans-serif',
+      },
     },
     hovermode: 'closest',
     hoverlabel: {
@@ -174,15 +183,15 @@ export const NodalAnalysisPlot: React.FC<NodalAnalysisPlotProps> = ({
       bordercolor: 'var(--border)',
       font: {
         color: 'var(--popover-foreground)',
-        family: 'SF Pro Display, -apple-system, system-ui, sans-serif'
-      }
-    }
+        family: 'SF Pro Display, -apple-system, system-ui, sans-serif',
+      },
+    },
   };
 
   const config = {
     responsive: true,
     displayModeBar: false,
-    scrollZoom: false
+    scrollZoom: false,
   };
 
   return (
@@ -197,27 +206,32 @@ export const NodalAnalysisPlot: React.FC<NodalAnalysisPlotProps> = ({
             IPR and VLP curves intersection showing the operating point
           </p>
         </div>
-        
-        {operatingPoint && !isNaN(operatingPoint.rate) && !isNaN(operatingPoint.pressure) && (
-          <Badge 
-            variant="secondary" 
-            className={cn(
-              'bg-system-green/10 text-system-green border-system-green/20',
-              'px-3 py-2 text-sm font-medium',
-              'dark:bg-system-green/20 dark:text-system-green'
-            )}
-          >
-            Operating Point: {operatingPoint.rate.toFixed(0)} BOPD @ {operatingPoint.pressure.toFixed(0)} psia
-          </Badge>
-        )}
+
+        {operatingPoint &&
+          !isNaN(operatingPoint.rate) &&
+          !isNaN(operatingPoint.pressure) && (
+            <Badge
+              variant="secondary"
+              className={cn(
+                'bg-system-green/10 text-system-green border-system-green/20',
+                'px-3 py-2 text-sm font-medium',
+                'dark:bg-system-green/20 dark:text-system-green'
+              )}
+            >
+              Operating Point: {operatingPoint.rate.toFixed(0)} BOPD @{' '}
+              {operatingPoint.pressure.toFixed(0)} psia
+            </Badge>
+          )}
       </div>
 
       {/* Chart Container */}
-      <Card className={cn(
-        'glass-effect border-border/30 shadow-lg',
-        'bg-gradient-to-br from-background/95 via-background/90 to-muted/30',
-        'backdrop-blur-sm overflow-hidden'
-      )}>
+      <Card
+        className={cn(
+          'glass-effect border-border/30 shadow-lg',
+          'bg-gradient-to-br from-background/95 via-background/90 to-muted/30',
+          'backdrop-blur-sm overflow-hidden'
+        )}
+      >
         <CardContent className="p-6">
           <div className="w-full h-[500px] relative">
             <Plot
@@ -233,17 +247,21 @@ export const NodalAnalysisPlot: React.FC<NodalAnalysisPlotProps> = ({
       </Card>
 
       {/* Chart Description */}
-      <Alert className={cn(
-        'border-system-blue/30 bg-system-blue/5',
-        'animate-in slide-in-from-left-2 duration-300'
-      )}>
+      <Alert
+        className={cn(
+          'border-system-blue/30 bg-system-blue/5',
+          'animate-in slide-in-from-left-2 duration-300'
+        )}
+      >
         <Info className="h-4 w-4 text-system-blue" />
         <AlertDescription className="text-system-blue/90 text-sm">
-          <strong>Chart Interpretation:</strong> The intersection of the IPR (blue) and VLP (red) curves represents 
-          the expected operating point (green diamond). Hover over the chart elements to see detailed values. 
-          The operating point indicates the natural flow rate of the well under current conditions.
+          <strong>Chart Interpretation:</strong> The intersection of the IPR
+          (blue) and VLP (red) curves represents the expected operating point
+          (green diamond). Hover over the chart elements to see detailed values.
+          The operating point indicates the natural flow rate of the well under
+          current conditions.
         </AlertDescription>
       </Alert>
     </div>
   );
-}; 
+};
