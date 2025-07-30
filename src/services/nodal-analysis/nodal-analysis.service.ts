@@ -1,69 +1,35 @@
 'use server';
 
 import {
-  PVTCalculationInput,
-  PVTCalculationResponse,
-  PVTCurveResponse,
+  APIErrorResponse,
   HydraulicsCalculationInput,
   HydraulicsCalculationResponse,
   HydraulicsRecommendResponse,
   IPRCalculationInput,
   IPRCalculationResponse,
-  ServiceResponse,
-  APIErrorResponse,
   NodalAnalysisEndpoint,
+  PVTCalculationInput,
+  PVTCalculationResponse,
+  PVTCurveResponse,
+  ServiceResponse,
 } from '@/core/nodal-modules/nodal-analysis/types/nodal-analysis.types';
-import { createServiceLogger, TimeUtils } from '@/lib/server-utils';
+import { createServiceLogger, RequestUtils } from '@/lib/server-utils';
+import { REQUEST_CONFIG } from '@/config/request.config';
+import { cookies } from 'next/headers';
 
 // ====================== CONFIGURACIÓN ======================
 
-const CONFIG = {
-  BASE_URL: 'https://codevance.net/api',
-  TIMEOUT: 30000, // 30 segundos
-  MAX_RETRIES: 3,
-  DEFAULT_VALUES: {
-    stock_temp: 60,
-    stock_pressure: 14.7,
-    step_size: 25,
-    water_gravity: 1,
-    roughness: 0.0006,
-    depth_steps: 100,
-    ipr_steps: 25,
-  },
+const DEFAULT_VALUES = {
+  stock_temp: 60,
+  stock_pressure: 14.7,
+  step_size: 25,
+  water_gravity: 1,
+  roughness: 0.0006,
+  depth_steps: 100,
+  ipr_steps: 25,
 } as const;
 
 const logger = createServiceLogger('NodalAnalysis');
-
-// ====================== UTILIDADES DE REQUEST ======================
-
-/**
- * Utilidades para manejo de timeouts y requests con AbortController
- */
-class RequestUtils {
-  static async fetchWithTimeout(
-    url: string,
-    options: RequestInit,
-    timeout: number
-  ): Promise<Response> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-    try {
-      const response = await fetch(url, {
-        ...options,
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-      return response;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      throw error;
-    }
-  }
-
-  static delay = TimeUtils.delay;
-  static getRetryDelay = TimeUtils.getRetryDelay;
-}
 
 /**
  * Maneja errores de la API y los convierte a formato estándar
@@ -136,10 +102,10 @@ function handleAPIError(
 function prepareInput(input: PVTCalculationInput): PVTCalculationInput {
   return {
     ...input,
-    stock_temp: input.stock_temp ?? CONFIG.DEFAULT_VALUES.stock_temp,
+    stock_temp: input.stock_temp ?? DEFAULT_VALUES.stock_temp,
     stock_pressure:
-      input.stock_pressure ?? CONFIG.DEFAULT_VALUES.stock_pressure,
-    step_size: input.step_size ?? CONFIG.DEFAULT_VALUES.step_size,
+      input.stock_pressure ?? DEFAULT_VALUES.stock_pressure,
+    step_size: input.step_size ?? DEFAULT_VALUES.step_size,
   };
 }
 
@@ -183,8 +149,11 @@ async function makeRequest<T>(
   endpoint: NodalAnalysisEndpoint,
   input: PVTCalculationInput
 ): Promise<ServiceResponse<T>> {
-  const url = `${CONFIG.BASE_URL}/pvt/${endpoint}`;
+  const url = `${REQUEST_CONFIG.BASE_URL}/pvt/${endpoint}`;
   const preparedInput = prepareInput(input);
+  
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
 
   logger.info('makeRequest', `Iniciando petición a ${endpoint}`, {
     endpoint,
@@ -192,9 +161,9 @@ async function makeRequest<T>(
     inputKeys: Object.keys(preparedInput),
   });
 
-  for (let attempt = 1; attempt <= CONFIG.MAX_RETRIES; attempt++) {
+  for (let attempt = 1; attempt <= REQUEST_CONFIG.MAX_RETRIES; attempt++) {
     try {
-      logger.info('makeRequest', `Intento ${attempt}/${CONFIG.MAX_RETRIES}`, {
+      logger.info('makeRequest', `Intento ${attempt}/${REQUEST_CONFIG.MAX_RETRIES}`, {
         endpoint,
         attempt,
         url,
@@ -207,11 +176,12 @@ async function makeRequest<T>(
           headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
+            ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
           },
           body: JSON.stringify(preparedInput),
           cache: 'no-store',
         },
-        CONFIG.TIMEOUT
+        REQUEST_CONFIG.TIMEOUT
       );
 
       logger.info('makeRequest', `Respuesta recibida`, {
@@ -279,7 +249,7 @@ async function makeRequest<T>(
       }
 
       // Reintentar para errores 5xx y algunos 4xx
-      if (attempt < CONFIG.MAX_RETRIES) {
+      if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
         logger.warn('makeRequest', `Reintentando en ${delay}ms`, {
           endpoint,
@@ -306,7 +276,7 @@ async function makeRequest<T>(
       const apiError = handleAPIError(error, endpoint, attempt);
 
       // Reintentar en el último intento
-      if (attempt < CONFIG.MAX_RETRIES) {
+      if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
         logger.warn('makeRequest', `Reintentando tras error en ${delay}ms`, {
           endpoint,
@@ -332,7 +302,7 @@ async function makeRequest<T>(
     error: handleAPIError(
       new Error('Máximo número de reintentos excedido'),
       endpoint,
-      CONFIG.MAX_RETRIES
+      REQUEST_CONFIG.MAX_RETRIES
     ),
   };
 }
@@ -351,15 +321,15 @@ function prepareHydraulicsInput(
       ...input.fluid_properties,
       water_gravity:
         input.fluid_properties.water_gravity ??
-        CONFIG.DEFAULT_VALUES.water_gravity,
+        DEFAULT_VALUES.water_gravity,
     },
     wellbore_geometry: {
       ...input.wellbore_geometry,
       roughness:
-        input.wellbore_geometry.roughness ?? CONFIG.DEFAULT_VALUES.roughness,
+        input.wellbore_geometry.roughness ?? DEFAULT_VALUES.roughness,
       depth_steps:
         input.wellbore_geometry.depth_steps ??
-        CONFIG.DEFAULT_VALUES.depth_steps,
+        DEFAULT_VALUES.depth_steps,
     },
   };
 }
@@ -461,8 +431,11 @@ function validateHydraulicsInput(input: HydraulicsCalculationInput): void {
 async function makeHydraulicsRequest<T>(
   input: HydraulicsCalculationInput
 ): Promise<ServiceResponse<T>> {
-  const url = `${CONFIG.BASE_URL}/hydraulics/calculate`;
+  const url = `${REQUEST_CONFIG.BASE_URL}/hydraulics/calculate`;
   const preparedInput = prepareHydraulicsInput(input);
+  
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
 
   logger.info(
     'makeHydraulicsRequest',
@@ -474,11 +447,11 @@ async function makeHydraulicsRequest<T>(
     }
   );
 
-  for (let attempt = 1; attempt <= CONFIG.MAX_RETRIES; attempt++) {
+  for (let attempt = 1; attempt <= REQUEST_CONFIG.MAX_RETRIES; attempt++) {
     try {
       logger.info(
         'makeHydraulicsRequest',
-        `Intento ${attempt}/${CONFIG.MAX_RETRIES}`,
+        `Intento ${attempt}/${REQUEST_CONFIG.MAX_RETRIES}`,
         {
           endpoint: 'hydraulics',
           attempt,
@@ -493,11 +466,12 @@ async function makeHydraulicsRequest<T>(
           headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
+            ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
           },
           body: JSON.stringify(preparedInput),
           cache: 'no-store',
         },
-        CONFIG.TIMEOUT
+        REQUEST_CONFIG.TIMEOUT
       );
 
       logger.info('makeHydraulicsRequest', `Respuesta recibida`, {
@@ -565,7 +539,7 @@ async function makeHydraulicsRequest<T>(
       }
 
       // Reintentar para errores 5xx y algunos 4xx
-      if (attempt < CONFIG.MAX_RETRIES) {
+      if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
         logger.warn('makeHydraulicsRequest', `Reintentando en ${delay}ms`, {
           endpoint: 'hydraulics',
@@ -592,7 +566,7 @@ async function makeHydraulicsRequest<T>(
       const apiError = handleAPIError(error, 'hydraulics', attempt);
 
       // Reintentar en el último intento
-      if (attempt < CONFIG.MAX_RETRIES) {
+      if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
         logger.warn(
           'makeHydraulicsRequest',
@@ -622,7 +596,7 @@ async function makeHydraulicsRequest<T>(
     error: handleAPIError(
       new Error('Máximo número de reintentos excedido'),
       'hydraulics',
-      CONFIG.MAX_RETRIES
+      REQUEST_CONFIG.MAX_RETRIES
     ),
   };
 }
@@ -633,8 +607,11 @@ async function makeHydraulicsRequest<T>(
 async function makeHydraulicsRecommendRequest<T>(
   input: HydraulicsCalculationInput
 ): Promise<ServiceResponse<T>> {
-  const url = `${CONFIG.BASE_URL}/hydraulics/recommend`;
+  const url = `${REQUEST_CONFIG.BASE_URL}/hydraulics/recommend`;
   const preparedInput = prepareHydraulicsInput(input);
+  
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
 
   logger.info(
     'makeHydraulicsRecommendRequest',
@@ -646,11 +623,11 @@ async function makeHydraulicsRecommendRequest<T>(
     }
   );
 
-  for (let attempt = 1; attempt <= CONFIG.MAX_RETRIES; attempt++) {
+  for (let attempt = 1; attempt <= REQUEST_CONFIG.MAX_RETRIES; attempt++) {
     try {
       logger.info(
         'makeHydraulicsRecommendRequest',
-        `Intento ${attempt}/${CONFIG.MAX_RETRIES}`,
+        `Intento ${attempt}/${REQUEST_CONFIG.MAX_RETRIES}`,
         {
           endpoint: 'recommend',
           attempt,
@@ -665,11 +642,12 @@ async function makeHydraulicsRecommendRequest<T>(
           headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
+            ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
           },
           body: JSON.stringify(preparedInput),
           cache: 'no-store',
         },
-        CONFIG.TIMEOUT
+        REQUEST_CONFIG.TIMEOUT
       );
 
       logger.info('makeHydraulicsRecommendRequest', `Respuesta recibida`, {
@@ -737,7 +715,7 @@ async function makeHydraulicsRecommendRequest<T>(
       }
 
       // Reintentar para errores 5xx y algunos 4xx
-      if (attempt < CONFIG.MAX_RETRIES) {
+      if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
         logger.warn(
           'makeHydraulicsRecommendRequest',
@@ -772,7 +750,7 @@ async function makeHydraulicsRecommendRequest<T>(
       const apiError = handleAPIError(error, 'recommend', attempt);
 
       // Reintentar en el último intento
-      if (attempt < CONFIG.MAX_RETRIES) {
+      if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
         logger.warn(
           'makeHydraulicsRecommendRequest',
@@ -802,7 +780,7 @@ async function makeHydraulicsRecommendRequest<T>(
     error: handleAPIError(
       new Error('Máximo número de reintentos excedido'),
       'recommend',
-      CONFIG.MAX_RETRIES
+      REQUEST_CONFIG.MAX_RETRIES
     ),
   };
 }
@@ -815,7 +793,7 @@ async function makeHydraulicsRecommendRequest<T>(
 function prepareIPRInput(input: IPRCalculationInput): IPRCalculationInput {
   return {
     ...input,
-    steps: input.steps ?? CONFIG.DEFAULT_VALUES.ipr_steps,
+    steps: input.steps ?? DEFAULT_VALUES.ipr_steps,
   };
 }
 
@@ -867,8 +845,11 @@ function validateIPRInput(input: IPRCalculationInput): void {
 async function makeIPRRequest<T>(
   input: IPRCalculationInput
 ): Promise<ServiceResponse<T>> {
-  const url = `${CONFIG.BASE_URL}/ipr/calculate`;
+  const url = `${REQUEST_CONFIG.BASE_URL}/ipr/calculate`;
   const preparedInput = prepareIPRInput(input);
+  
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
 
   logger.info('makeIPRRequest', `Iniciando petición a ipr/calculate`, {
     endpoint: 'ipr',
@@ -876,11 +857,11 @@ async function makeIPRRequest<T>(
     inputKeys: Object.keys(preparedInput),
   });
 
-  for (let attempt = 1; attempt <= CONFIG.MAX_RETRIES; attempt++) {
+  for (let attempt = 1; attempt <= REQUEST_CONFIG.MAX_RETRIES; attempt++) {
     try {
       logger.info(
         'makeIPRRequest',
-        `Intento ${attempt}/${CONFIG.MAX_RETRIES}`,
+        `Intento ${attempt}/${REQUEST_CONFIG.MAX_RETRIES}`,
         {
           endpoint: 'ipr',
           attempt,
@@ -895,11 +876,12 @@ async function makeIPRRequest<T>(
           headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
+            ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
           },
           body: JSON.stringify(preparedInput),
           cache: 'no-store',
         },
-        CONFIG.TIMEOUT
+        REQUEST_CONFIG.TIMEOUT
       );
 
       logger.info('makeIPRRequest', `Respuesta recibida`, {
@@ -967,7 +949,7 @@ async function makeIPRRequest<T>(
       }
 
       // Reintentar para errores 5xx y algunos 4xx
-      if (attempt < CONFIG.MAX_RETRIES) {
+      if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
         logger.warn('makeIPRRequest', `Reintentando en ${delay}ms`, {
           endpoint: 'ipr',
@@ -994,7 +976,7 @@ async function makeIPRRequest<T>(
       const apiError = handleAPIError(error, 'ipr', attempt);
 
       // Reintentar en el último intento
-      if (attempt < CONFIG.MAX_RETRIES) {
+      if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
         logger.warn('makeIPRRequest', `Reintentando tras error en ${delay}ms`, {
           endpoint: 'ipr',
@@ -1020,7 +1002,7 @@ async function makeIPRRequest<T>(
     error: handleAPIError(
       new Error('Máximo número de reintentos excedido'),
       'ipr',
-      CONFIG.MAX_RETRIES
+      REQUEST_CONFIG.MAX_RETRIES
     ),
   };
 }

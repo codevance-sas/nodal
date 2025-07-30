@@ -94,7 +94,7 @@ export const NodalAnalysisIprModule: React.FC = () => {
   const hasErrors = Object.keys(errors).length > 0;
 
   return (
-    <div className="w-full max-w-4xl mx-auto animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+    <div className="w-full mx-auto animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
       <Card
         className={cn(
           'border-border/60 shadow-xl shadow-black/5',

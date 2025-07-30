@@ -330,7 +330,7 @@ export const NodalAnalysisPvtModule: React.FC = () => {
   const displayBP = getDisplayBubblePoint();
 
   return (
-    <div className="w-full max-w-6xl mx-auto animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+    <div className="w-full mx-auto animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
       <Card
         className={cn(
           'border-border/60 shadow-xl shadow-black/5',

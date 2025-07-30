@@ -13,11 +13,23 @@ import { Button } from '@/components/ui/button';
 import { SidebarToggle } from '@/components/layout/sidebar-toggle';
 import { ModeToggle } from '@/components/mode-toggle';
 import { useTheme } from 'next-themes';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, Users, Key } from 'lucide-react';
 import Image from 'next/image';
+import { logoutAction } from '@/actions/auth/auth.action';
+import Link from 'next/link';
 
-export function Header({ children }: { children?: React.ReactNode }) {
+export function Header({
+  email,
+  role,
+  children,
+}: {
+  email: string;
+  role: 'admin' | 'user';
+  children?: React.ReactNode;
+}) {
   const { theme } = useTheme();
+
+  const isAdmin = role === 'admin';
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex h-16 w-full shrink-0 items-center justify-between gap-4 border-b bg-sidebar text-sidebar-foreground px-4 sm:px-6">
@@ -56,30 +68,51 @@ export function Header({ children }: { children?: React.ReactNode }) {
                 <AvatarFallback>DP</AvatarFallback>
               </Avatar>
               <div className="hidden text-left md:block">
-                <p className="font-bold text-sm">Usuario</p>
-                <p className="text-xs text-sidebar-foreground/80">
-                  email@example.com
-                </p>
+                <p className="text-xs text-sidebar-foreground/80">{email}</p>
               </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              <span>Perfil</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            {isAdmin && (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/dashboard/admin/user-management"
+                    className="flex items-center"
+                  >
+                    <Users className="mr-2 h-4 w-4" />
+                    <span>User Management</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/dashboard/admin/token-management"
+                    className="flex items-center"
+                  >
+                    <Key className="mr-2 h-4 w-4" />
+                    <span>Token Management</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
+            <DropdownMenuItem onClick={logoutAction}>
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Cerrar Sesión</span>
+              <span>Log Out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button variant="plain" size="icon" className="md:hidden">
+        <Button
+          className="md:hidden"
+          onClick={logoutAction}
+          size="icon"
+          variant="plain"
+        >
           <LogOut className="h-5 w-5" />
-          <span className="sr-only">Cerrar sesión</span>
+          <span className="sr-only">Log out</span>
         </Button>
       </div>
     </header>

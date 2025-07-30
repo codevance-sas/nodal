@@ -135,7 +135,7 @@ export const NodalAnalysisContainer: React.FC = () => {
             className={cn(
               'transition-all duration-500 ease-out',
               'animate-in fade-in-0 slide-in-from-bottom-4',
-              showBHADesign ? 'w-[68%] flex-shrink-0' : 'w-full max-w-4xl'
+              showBHADesign ? 'w-[68%] flex-shrink-0' : 'w-full'
             )}
           >
             {activeSection === 'ipr' && <NodalAnalysisIprModule />}

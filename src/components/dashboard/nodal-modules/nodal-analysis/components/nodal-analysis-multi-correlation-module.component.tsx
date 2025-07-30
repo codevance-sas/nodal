@@ -132,7 +132,7 @@ export const NodalAnalysisMultiCorrelationModule: React.FC<MultiCorrelationModul
   // Prerequisites check
   if (!completeness.pvt || !completeness.ipr) {
     return (
-      <div className="w-full max-w-7xl mx-auto animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+      <div className="w-full mx-auto animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
         <Alert className={cn(
           'border-system-orange/50 bg-system-orange/8 shadow-md shadow-system-orange/10',
           'animate-in slide-in-from-left-2 duration-300',
