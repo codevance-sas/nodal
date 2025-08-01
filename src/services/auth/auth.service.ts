@@ -14,6 +14,9 @@ import {
   Token,
   TokensListResponse,
   GenerateTokenRequest,
+  AllowedDomainsResponse,
+  CreateDomainRequest,
+  AllowedDomain,
 } from '@/core/common/types/auth.types';
 import { REQUEST_CONFIG } from '@/config/request.config';
 import { cookies } from 'next/headers';
@@ -902,6 +905,547 @@ export async function generateToken(
     error: handleAPIError(
       new Error('Maximum number of retries exceeded'),
       'auth/admin/generate-token',
+      REQUEST_CONFIG.MAX_RETRIES
+    ),
+  };
+}
+
+export async function getAllowedDomains(
+  skip?: number,
+  limit?: number
+): Promise<ServiceResponse<AllowedDomainsResponse>> {
+  'use server';
+
+  const queryParams = new URLSearchParams();
+  if (typeof skip === 'number') queryParams.append('skip', skip.toString());
+  if (typeof limit === 'number') queryParams.append('limit', limit.toString());
+
+  const url = `${REQUEST_CONFIG.BASE_URL}/auth/allowed-domains${
+    queryParams.toString() ? `?${queryParams.toString()}` : ''
+  }`;
+
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+
+  if (!accessToken) {
+    return {
+      success: false,
+      error: {
+        error: {
+          detail: [
+            {
+              loc: ['auth', '0'],
+              msg: 'No access token found',
+              type: 'auth_error',
+            },
+          ],
+        },
+        status: 401,
+        endpoint: 'auth/allowed-domains',
+        timestamp: new Date().toISOString(),
+      },
+    };
+  }
+
+  logger.info('getAllowedDomains', 'Starting get allowed domains request', {
+    endpoint: 'auth/allowed-domains',
+    url,
+  });
+
+  for (let attempt = 1; attempt <= REQUEST_CONFIG.MAX_RETRIES; attempt++) {
+    try {
+      logger.info(
+        'getAllowedDomains',
+        `Attempt ${attempt}/${REQUEST_CONFIG.MAX_RETRIES}`,
+        {
+          endpoint: 'auth/allowed-domains',
+          attempt,
+          url,
+        }
+      );
+
+      const response = await RequestUtils.fetchWithTimeout(
+        url,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          cache: 'no-store',
+        },
+        REQUEST_CONFIG.TIMEOUT
+      );
+
+      logger.info('getAllowedDomains', 'Response received', {
+        endpoint: 'auth/allowed-domains',
+        attempt,
+        status: response.status,
+        statusText: response.statusText,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        logger.info('getAllowedDomains', 'Get allowed domains successful', {
+          endpoint: 'auth/allowed-domains',
+          attempt,
+          dataKeys: data ? Object.keys(data) : [],
+        });
+
+        return {
+          success: true,
+          data: data as AllowedDomainsResponse,
+        };
+      }
+
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = {
+          detail: [
+            {
+              loc: ['response', 0],
+              msg: response.statusText,
+              type: 'http_error',
+            },
+          ],
+        };
+      }
+
+      const apiError: APIErrorResponse = {
+        error: errorData,
+        status: response.status,
+        endpoint: 'auth/allowed-domains',
+        timestamp: new Date().toISOString(),
+      };
+
+      logger.error('getAllowedDomains', 'API Error', {
+        endpoint: 'auth/allowed-domains',
+        attempt,
+        status: response.status,
+        error: errorData,
+      });
+
+      if (
+        response.status >= 400 &&
+        response.status < 500 &&
+        ![408, 429].includes(response.status)
+      ) {
+        return {
+          success: false,
+          error: apiError,
+        };
+      }
+
+      if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
+        const delay = RequestUtils.getRetryDelay(attempt - 1);
+        logger.warn('getAllowedDomains', `Retrying in ${delay}ms`, {
+          endpoint: 'auth/allowed-domains',
+          attempt,
+          nextAttempt: attempt + 1,
+          delay,
+        });
+        await RequestUtils.delay(delay);
+        continue;
+      }
+
+      return {
+        success: false,
+        error: apiError,
+      };
+    } catch (error: any) {
+      logger.error('getAllowedDomains', `Error in attempt ${attempt}`, {
+        endpoint: 'auth/allowed-domains',
+        attempt,
+        error: error.message,
+        stack: error.stack,
+      });
+
+      const apiError = handleAPIError(error, 'auth/allowed-domains', attempt);
+
+      if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
+        const delay = RequestUtils.getRetryDelay(attempt - 1);
+        logger.warn('getAllowedDomains', `Retrying after error in ${delay}ms`, {
+          endpoint: 'auth/allowed-domains',
+          attempt,
+          nextAttempt: attempt + 1,
+          delay,
+          errorType: error.name,
+        });
+        await RequestUtils.delay(delay);
+        continue;
+      }
+
+      return {
+        success: false,
+        error: apiError,
+      };
+    }
+  }
+
+  return {
+    success: false,
+    error: handleAPIError(
+      new Error('Maximum number of retries exceeded'),
+      'auth/allowed-domains',
+      REQUEST_CONFIG.MAX_RETRIES
+    ),
+  };
+}
+
+export async function addAllowedDomain(
+  data: CreateDomainRequest
+): Promise<ServiceResponse<AllowedDomain>> {
+  'use server';
+
+  const url = `${REQUEST_CONFIG.BASE_URL}/auth/allowed-domains`;
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+
+  if (!accessToken) {
+    return {
+      success: false,
+      error: {
+        error: {
+          detail: [
+            {
+              loc: ['auth', '0'],
+              msg: 'No access token found',
+              type: 'auth_error',
+            },
+          ],
+        },
+        status: 401,
+        endpoint: 'auth/allowed-domains',
+        timestamp: new Date().toISOString(),
+      },
+    };
+  }
+
+  logger.info('addAllowedDomain', 'Starting add allowed domain request', {
+    endpoint: 'auth/allowed-domains',
+    url,
+    data,
+  });
+
+  for (let attempt = 1; attempt <= REQUEST_CONFIG.MAX_RETRIES; attempt++) {
+    try {
+      logger.info(
+        'addAllowedDomain',
+        `Attempt ${attempt}/${REQUEST_CONFIG.MAX_RETRIES}`,
+        {
+          endpoint: 'auth/allowed-domains',
+          attempt,
+          url,
+        }
+      );
+
+      const response = await RequestUtils.fetchWithTimeout(
+        url,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(data),
+          cache: 'no-store',
+        },
+        REQUEST_CONFIG.TIMEOUT
+      );
+
+      logger.info('addAllowedDomain', 'Response received', {
+        endpoint: 'auth/allowed-domains',
+        attempt,
+        status: response.status,
+        statusText: response.statusText,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        logger.info('addAllowedDomain', 'Add allowed domain successful', {
+          endpoint: 'auth/allowed-domains',
+          attempt,
+          dataKeys: data ? Object.keys(data) : [],
+        });
+
+        return {
+          success: true,
+          data: data as AllowedDomain,
+        };
+      }
+
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = {
+          detail: [
+            {
+              loc: ['response', 0],
+              msg: response.statusText,
+              type: 'http_error',
+            },
+          ],
+        };
+      }
+
+      const apiError: APIErrorResponse = {
+        error: errorData,
+        status: response.status,
+        endpoint: 'auth/allowed-domains',
+        timestamp: new Date().toISOString(),
+      };
+
+      logger.error('addAllowedDomain', 'API Error', {
+        endpoint: 'auth/allowed-domains',
+        attempt,
+        status: response.status,
+        error: errorData,
+      });
+
+      if (
+        response.status >= 400 &&
+        response.status < 500 &&
+        ![408, 429].includes(response.status)
+      ) {
+        return {
+          success: false,
+          error: apiError,
+        };
+      }
+
+      if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
+        const delay = RequestUtils.getRetryDelay(attempt - 1);
+        logger.warn('addAllowedDomain', `Retrying in ${delay}ms`, {
+          endpoint: 'auth/allowed-domains',
+          attempt,
+          nextAttempt: attempt + 1,
+          delay,
+        });
+        await RequestUtils.delay(delay);
+        continue;
+      }
+
+      return {
+        success: false,
+        error: apiError,
+      };
+    } catch (error: any) {
+      logger.error('addAllowedDomain', `Error in attempt ${attempt}`, {
+        endpoint: 'auth/allowed-domains',
+        attempt,
+        error: error.message,
+        stack: error.stack,
+      });
+
+      const apiError = handleAPIError(error, 'auth/allowed-domains', attempt);
+
+      if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
+        const delay = RequestUtils.getRetryDelay(attempt - 1);
+        logger.warn('addAllowedDomain', `Retrying after error in ${delay}ms`, {
+          endpoint: 'auth/allowed-domains',
+          attempt,
+          nextAttempt: attempt + 1,
+          delay,
+          errorType: error.name,
+        });
+        await RequestUtils.delay(delay);
+        continue;
+      }
+
+      return {
+        success: false,
+        error: apiError,
+      };
+    }
+  }
+
+  return {
+    success: false,
+    error: handleAPIError(
+      new Error('Maximum number of retries exceeded'),
+      'auth/allowed-domains',
+      REQUEST_CONFIG.MAX_RETRIES
+    ),
+  };
+}
+
+export async function removeAllowedDomain(
+  domain: string
+): Promise<ServiceResponse<any>> {
+  'use server';
+
+  const url = `${REQUEST_CONFIG.BASE_URL}/auth/allowed-domains/${encodeURIComponent(domain)}`;
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+
+  if (!accessToken) {
+    return {
+      success: false,
+      error: {
+        error: {
+          detail: [
+            {
+              loc: ['auth', '0'],
+              msg: 'No access token found',
+              type: 'auth_error',
+            },
+          ],
+        },
+        status: 401,
+        endpoint: 'auth/allowed-domains',
+        timestamp: new Date().toISOString(),
+      },
+    };
+  }
+
+  logger.info('removeAllowedDomain', 'Starting remove allowed domain request', {
+    endpoint: 'auth/allowed-domains',
+    url,
+    domain,
+  });
+
+  for (let attempt = 1; attempt <= REQUEST_CONFIG.MAX_RETRIES; attempt++) {
+    try {
+      logger.info(
+        'removeAllowedDomain',
+        `Attempt ${attempt}/${REQUEST_CONFIG.MAX_RETRIES}`,
+        {
+          endpoint: 'auth/allowed-domains',
+          attempt,
+          url,
+        }
+      );
+
+      const response = await RequestUtils.fetchWithTimeout(
+        url,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          cache: 'no-store',
+        },
+        REQUEST_CONFIG.TIMEOUT
+      );
+
+      logger.info('removeAllowedDomain', 'Response received', {
+        endpoint: 'auth/allowed-domains',
+        attempt,
+        status: response.status,
+        statusText: response.statusText,
+      });
+
+      if (response.ok) {
+        logger.info('removeAllowedDomain', 'Remove allowed domain successful', {
+          endpoint: 'auth/allowed-domains',
+          attempt,
+          domain,
+        });
+
+        return {
+          success: true,
+          data: { message: 'Domain removed successfully' },
+        };
+      }
+
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = {
+          detail: [
+            {
+              loc: ['response', 0],
+              msg: response.statusText,
+              type: 'http_error',
+            },
+          ],
+        };
+      }
+
+      const apiError: APIErrorResponse = {
+        error: errorData,
+        status: response.status,
+        endpoint: 'auth/allowed-domains',
+        timestamp: new Date().toISOString(),
+      };
+
+      logger.error('removeAllowedDomain', 'API Error', {
+        endpoint: 'auth/allowed-domains',
+        attempt,
+        status: response.status,
+        error: errorData,
+      });
+
+      if (
+        response.status >= 400 &&
+        response.status < 500 &&
+        ![408, 429].includes(response.status)
+      ) {
+        return {
+          success: false,
+          error: apiError,
+        };
+      }
+
+      if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
+        const delay = RequestUtils.getRetryDelay(attempt - 1);
+        logger.warn('removeAllowedDomain', `Retrying in ${delay}ms`, {
+          endpoint: 'auth/allowed-domains',
+          attempt,
+          nextAttempt: attempt + 1,
+          delay,
+        });
+        await RequestUtils.delay(delay);
+        continue;
+      }
+
+      return {
+        success: false,
+        error: apiError,
+      };
+    } catch (error: any) {
+      logger.error('removeAllowedDomain', `Error in attempt ${attempt}`, {
+        endpoint: 'auth/allowed-domains',
+        attempt,
+        error: error.message,
+        stack: error.stack,
+      });
+
+      const apiError = handleAPIError(error, 'auth/allowed-domains', attempt);
+
+      if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
+        const delay = RequestUtils.getRetryDelay(attempt - 1);
+        logger.warn('removeAllowedDomain', `Retrying after error in ${delay}ms`, {
+          endpoint: 'auth/allowed-domains',
+          attempt,
+          nextAttempt: attempt + 1,
+          delay,
+          errorType: error.name,
+        });
+        await RequestUtils.delay(delay);
+        continue;
+      }
+
+      return {
+        success: false,
+        error: apiError,
+      };
+    }
+  }
+
+  return {
+    success: false,
+    error: handleAPIError(
+      new Error('Maximum number of retries exceeded'),
+      'auth/allowed-domains',
       REQUEST_CONFIG.MAX_RETRIES
     ),
   };

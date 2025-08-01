@@ -57,6 +57,22 @@ export interface ValidateTokenResponse {
   access_token: string;
 }
 
+export interface AllowedDomain {
+  domain: string;
+  created_at: string;
+  description: string;
+}
+
+export interface AllowedDomainsResponse {
+  domains: AllowedDomain[];
+  total: number;
+}
+
+export interface CreateDomainRequest {
+  domain: string;
+  description: string;
+}
+
 export interface APIErrorDetail {
   loc: string[];
   msg: string;

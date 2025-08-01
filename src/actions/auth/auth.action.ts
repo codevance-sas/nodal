@@ -12,6 +12,9 @@ import {
   validateToken,
   getAllTokens,
   generateToken,
+  getAllowedDomains,
+  addAllowedDomain,
+  removeAllowedDomain,
 } from '@/services/auth/auth.service';
 import {
   LoginInput,
@@ -24,6 +27,9 @@ import {
   Token,
   TokensListResponse,
   GenerateTokenRequest,
+  AllowedDomainsResponse,
+  CreateDomainRequest,
+  AllowedDomain,
 } from '@/core/common/types/auth.types';
 import { redirect } from 'next/navigation';
 import type {
@@ -390,6 +396,213 @@ export async function validateTokenAction(
       const cookieStore = await cookies();
 
       cookieStore.set('access_token', serviceResult.data.access_token);
+
+      return {
+        success: true,
+        data: serviceResult.data,
+      };
+    }
+
+    return handleServiceError(serviceResult, actionName);
+  } catch (error: any) {
+    logger.error(actionName, 'Unexpected error', {
+      error: error.message,
+      stack: error.stack,
+    });
+
+    return createErrorResponse({
+      message: 'An unexpected error occurred',
+      code: 'unexpected_error',
+      details: {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+}
+
+export async function getAllowedDomainsAction(
+  skip?: number,
+  limit?: number
+): Promise<ActionResult<AllowedDomainsResponse>> {
+  const actionName = 'getAllowedDomains';
+
+  try {
+    logger.info(actionName, `Starting ${actionName} from client`, {
+      skip,
+      limit,
+    });
+
+    const serviceResult = await getAllowedDomains(skip, limit);
+
+    if (serviceResult.success) {
+      logger.info(actionName, `${actionName} completed successfully`, {
+        total: serviceResult.data.total,
+        domains: serviceResult.data.domains.length,
+      });
+
+      return {
+        success: true,
+        data: serviceResult.data,
+      };
+    }
+
+    return handleServiceError(serviceResult, actionName);
+  } catch (error: any) {
+    logger.error(actionName, 'Unexpected error', {
+      error: error.message,
+      stack: error.stack,
+    });
+
+    return createErrorResponse({
+      message: 'An unexpected error occurred',
+      code: 'unexpected_error',
+      details: {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+}
+
+function validateCreateDomainInput(
+  input: any,
+  context: string
+): input is CreateDomainRequest {
+  if (!input || typeof input !== 'object') {
+    logger.warn(context, 'Invalid input type', { type: typeof input });
+    return false;
+  }
+
+  // Validate domain
+  if (!input.domain || typeof input.domain !== 'string') {
+    logger.warn(context, 'Invalid or missing domain', { domain: input.domain });
+    return false;
+  }
+
+  // Basic domain format validation
+  const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+  if (!domainRegex.test(input.domain)) {
+    logger.warn(context, 'Invalid domain format', { domain: input.domain });
+    return false;
+  }
+
+  // Validate description
+  if (!input.description || typeof input.description !== 'string') {
+    logger.warn(context, 'Invalid or missing description', {
+      description: input.description,
+    });
+    return false;
+  }
+
+  if (input.description.length < 1 || input.description.length > 500) {
+    logger.warn(context, 'Description length out of range', {
+      length: input.description.length,
+    });
+    return false;
+  }
+
+  return true;
+}
+
+export async function addAllowedDomainAction(
+  input: CreateDomainRequest
+): Promise<ActionResult<AllowedDomain>> {
+  const actionName = 'addAllowedDomain';
+
+  try {
+    logger.info(actionName, `Starting ${actionName} from client`, {
+      hasInput: !!input,
+      inputKeys: input ? Object.keys(input) : [],
+    });
+
+    // Validation
+    if (!validateCreateDomainInput(input, actionName)) {
+      return createErrorResponse({
+        message: 'Invalid domain creation request',
+        code: 'validation_error',
+        details: { receivedInput: input },
+      });
+    }
+
+    const serviceResult = await addAllowedDomain(input);
+
+    if (serviceResult.success) {
+      logger.info(actionName, `${actionName} completed successfully`, {
+        domain: serviceResult.data.domain,
+        description: serviceResult.data.description,
+      });
+
+      return {
+        success: true,
+        data: serviceResult.data,
+      };
+    }
+
+    return handleServiceError(serviceResult, actionName);
+  } catch (error: any) {
+    logger.error(actionName, 'Unexpected error', {
+      error: error.message,
+      stack: error.stack,
+    });
+
+    return createErrorResponse({
+      message: 'An unexpected error occurred',
+      code: 'unexpected_error',
+      details: {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
+}
+
+function validateRemoveDomainInput(domain: any, context: string): domain is string {
+  if (!domain || typeof domain !== 'string') {
+    logger.warn(context, 'Invalid domain parameter', { domain: typeof domain });
+    return false;
+  }
+
+  if (domain.trim().length === 0) {
+    logger.warn(context, 'Empty domain parameter', { domain });
+    return false;
+  }
+
+  // Basic domain format validation
+  const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+  if (!domainRegex.test(domain)) {
+    logger.warn(context, 'Invalid domain format', { domain });
+    return false;
+  }
+
+  return true;
+}
+
+export async function removeAllowedDomainAction(
+  domain: string
+): Promise<ActionResult<any>> {
+  const actionName = 'removeAllowedDomain';
+
+  try {
+    logger.info(actionName, `Starting ${actionName} from client`, {
+      domain,
+    });
+
+    // Validation
+    if (!validateRemoveDomainInput(domain, actionName)) {
+      return createErrorResponse({
+        message: 'Invalid domain parameter',
+        code: 'validation_error',
+        details: { receivedDomain: domain },
+      });
+    }
+
+    const serviceResult = await removeAllowedDomain(domain);
+
+    if (serviceResult.success) {
+      logger.info(actionName, `${actionName} completed successfully`, {
+        domain,
+      });
 
       return {
         success: true,
