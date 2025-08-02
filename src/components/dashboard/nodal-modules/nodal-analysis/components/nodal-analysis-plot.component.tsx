@@ -166,8 +166,8 @@ export const NodalAnalysisPlot: React.FC<NodalAnalysisPlotProps> = ({
     paper_bgcolor: 'transparent',
     margin: { l: 80, r: 50, t: 30, b: 80 },
     legend: {
-      x: 0.02,
-      y: 0.98,
+      x: 0.7,
+      y: 0.95,
       bgcolor: 'var(--background)',
       bordercolor: 'var(--border)',
       borderwidth: 1,
@@ -190,8 +190,6 @@ export const NodalAnalysisPlot: React.FC<NodalAnalysisPlotProps> = ({
 
   const config = {
     responsive: true,
-    displayModeBar: false,
-    scrollZoom: false,
   };
 
   return (

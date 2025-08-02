@@ -143,7 +143,7 @@ export const NodalAnalysisContainer: React.FC = () => {
             {activeSection === 'hydraulics' && (
               <NodalAnalysisHydraulicsModule segments={mergedRows} />
             )}
-            {activeSection === 'results' && <NodalAnalysisChartsModule />}
+            {activeSection === 'results' && <NodalAnalysisChartsModule segments={mergedRows} />}
             {activeSection === 'correlations' && (
               <NodalAnalysisMultiCorrelationModule segments={mergedRows} />
             )}

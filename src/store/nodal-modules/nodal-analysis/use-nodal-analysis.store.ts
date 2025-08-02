@@ -350,8 +350,8 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
           ...state.completeness,
           hydraulics: true,
           results: true,
-          activeSection: 'results',
         },
+        activeSection: 'results',
       }));
     } catch (err: any) {
       console.error(err);

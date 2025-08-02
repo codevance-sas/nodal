@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -9,9 +9,17 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, BarChart3, AlertTriangle, Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Loader2,
+  BarChart3,
+  AlertTriangle,
+  Info,
+  RefreshCw,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAnalysisStore } from '@/store/nodal-modules/nodal-analysis/use-nodal-analysis.store';
+import { useFormHydraulicsPersistenceStore } from '@/store/nodal-modules/nodal-analysis/use-form-hydraulics-persistence.store';
 import { NodalAnalysisPlot } from './nodal-analysis-plot.component';
 import { NodalAnalysisSummary } from './nodal-analysis-summary.component';
 import {
@@ -20,19 +28,59 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { recalculateVLPFromSavedData } from '@/core/nodal-modules/nodal-analysis/util/recalculate-vlp.util';
+import type { Segments } from '@/core/nodal-modules/nodal-analysis/util/merge-bha-and-casing-rows.util';
 
-export const NodalAnalysisChartsModule: React.FC = () => {
+interface NodalAnalysisChartsModuleProps {
+  segments?: Segments[];
+}
+
+export const NodalAnalysisChartsModule: React.FC<
+  NodalAnalysisChartsModuleProps
+> = ({ segments = [] }) => {
+  const [isRecalculating, setIsRecalculating] = useState(false);
+
   const {
     iprCurve,
     vlpCurve,
     operatingPoint,
     iprInputs,
     pvtInputs,
+    hydraulicsInputs,
+    correlationMethod,
     hydraulicsResult,
     completeness,
     loading,
     errors,
   } = useAnalysisStore();
+
+  const { currentFormSet, quickSave } = useFormHydraulicsPersistenceStore();
+
+  const handleRecalculateVLP = async () => {
+    if (!currentFormSet) {
+      quickSave(
+        iprInputs as any,
+        pvtInputs as any,
+        hydraulicsInputs,
+        correlationMethod
+      );
+      return;
+    }
+
+    setIsRecalculating(true);
+    try {
+      await recalculateVLPFromSavedData(currentFormSet, segments);
+    } catch (error) {
+      console.error('Error recalculating VLP:', error);
+    } finally {
+      setIsRecalculating(false);
+    }
+  };
+
+  const canRecalculate =
+    completeness.ipr &&
+    completeness.pvt &&
+    (currentFormSet || completeness.hydraulics);
 
   if (loading.hydraulics) {
     return (
@@ -91,19 +139,47 @@ export const NodalAnalysisChartsModule: React.FC = () => {
         )}
       >
         <CardHeader className="space-y-4 pb-8">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-br from-system-blue/10 to-system-purple/10 rounded-xl">
-              <BarChart3 className="h-6 w-6 text-system-blue" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-gradient-to-br from-system-blue/10 to-system-purple/10 rounded-xl">
+                <BarChart3 className="h-6 w-6 text-system-blue" />
+              </div>
+              <div>
+                <CardTitle className="text-title-1 font-semibold text-foreground">
+                  Nodal Analysis Results
+                </CardTitle>
+                <CardDescription className="text-subheadline text-muted-foreground leading-relaxed">
+                  Interactive charts and comprehensive analysis of IPR/VLP
+                  intersection and operating point
+                </CardDescription>
+              </div>
             </div>
-            <div>
-              <CardTitle className="text-title-1 font-semibold text-foreground">
-                Nodal Analysis Results
-              </CardTitle>
-              <CardDescription className="text-subheadline text-muted-foreground leading-relaxed">
-                Interactive charts and comprehensive analysis of IPR/VLP
-                intersection and operating point
-              </CardDescription>
-            </div>
+
+            {/* Recalculate VLP Button */}
+            <Button
+              onClick={handleRecalculateVLP}
+              disabled={!canRecalculate || isRecalculating}
+              className={cn(
+                'h-9 px-4 text-xs font-medium',
+                'bg-gradient-to-r from-system-orange to-system-orange/90',
+                'hover:from-system-orange/90 hover:to-system-orange',
+                'text-white shadow-lg hover:shadow-xl hover:shadow-system-orange/25',
+                'transition-all duration-200 ease-apple',
+                'disabled:opacity-50 disabled:cursor-not-allowed'
+              )}
+            >
+              {isRecalculating ? (
+                <>
+                  <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
+                  Recalculating...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-3 w-3 mr-1.5" />
+                  Recalculate VLP
+                </>
+              )}
+            </Button>
           </div>
         </CardHeader>
 

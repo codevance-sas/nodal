@@ -45,7 +45,6 @@ export interface IPRCalculationInput {
   steps: number; // Default 25
 }
 
-// TODO: Definir tipos específicos cuando conozcamos la estructura de respuesta
 export type IPRCalculationResponse = any;
 
 // ==================== PVT ====================
@@ -70,7 +69,6 @@ export interface PVTCalculationInput {
   ift: number;
 }
 
-// TODO: Definir tipos específicos cuando conozcamos la estructura de respuesta
 export type PVTCalculationResponse = any;
 export type PVTCurveResponse = any;
 

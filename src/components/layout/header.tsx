@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { SidebarToggle } from '@/components/layout/sidebar-toggle';
 import { ModeToggle } from '@/components/mode-toggle';
 import { useTheme } from 'next-themes';
-import { LogOut, Users, Key } from 'lucide-react';
+import { LogOut, Users, Key, Globe } from 'lucide-react';
 import Image from 'next/image';
 import { logoutAction } from '@/actions/auth/auth.action';
 import Link from 'next/link';
@@ -94,6 +94,16 @@ export function Header({
                   >
                     <Key className="mr-2 h-4 w-4" />
                     <span>Token Management</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/dashboard/admin/domain-management"
+                    className="flex items-center"
+                  >
+                    <Globe className="mr-2 h-4 w-4" />
+                    <span>Domain Management</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

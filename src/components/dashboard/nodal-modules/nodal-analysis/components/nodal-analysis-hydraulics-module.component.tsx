@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
 import { useAnalysisStore } from '@/store/nodal-modules/nodal-analysis/use-nodal-analysis.store';
 import { useSurveyDataStore } from '@/store/nodal-modules/use-survey-data.store';
 import { cn } from '@/lib/utils';
@@ -213,6 +212,19 @@ export const NodalAnalysisHydraulicsModule: React.FC<HydraulicsModuleProps> = ({
   const handleCorrelationChange = (correlation: string) => {
     setCorrelationMethod(correlation);
 
+    const isVerticalCorrelation = [
+      'hagedorn-brown',
+      'duns-ross',
+      'orkiszewski',
+    ].includes(correlation);
+    const defaultInclination = isVerticalCorrelation ? 0 : 90;
+
+    setInclination(defaultInclination);
+    setFormData({
+      ...formData,
+      inclination: defaultInclination,
+    });
+
     if (correlation !== 'beggs-brill') {
       clearSurveyData();
       setSurveyDataValid(false);
@@ -223,7 +235,6 @@ export const NodalAnalysisHydraulicsModule: React.FC<HydraulicsModuleProps> = ({
     try {
       const rec = await recommendBestCorrelation(formData);
       handleCorrelationChange(rec);
-      // TODO: Show toast notification instead of alert
       alert(`Recommended method: ${rec}`);
     } catch (error) {
       console.error('Error getting recommendation:', error);
@@ -404,7 +415,6 @@ export const NodalAnalysisHydraulicsModule: React.FC<HydraulicsModuleProps> = ({
                 </h3>
 
                 {isBeggsbrillSelected ? (
-                  // ✅ Modo con uploader activo — 2 columnas: inputs y uploader
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Columna izquierda: Inputs con 2 por fila */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -433,7 +443,6 @@ export const NodalAnalysisHydraulicsModule: React.FC<HydraulicsModuleProps> = ({
                     </div>
                   </div>
                 ) : (
-                  // ✅ Modo normal sin uploader
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {wellboreFields.map(field => (
                       <InputField
