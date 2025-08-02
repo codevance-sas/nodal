@@ -68,7 +68,7 @@ export const BHADesignTab: FC<BHADesignTabProps> = ({ nodalColors }) => {
   );
   const [exaggeration, setExaggeration] = useState<number>(30);
   const [debounced] = useDebouncedValue(exaggeration, 100);
-  const [isTableOpen, setTableOpen] = useState(false);
+  const [isTableOpen, setTableOpen] = useState(true);
   const [depthInput, setDepthInput] = useState<string>('');
   const [showNodalPoint, setShowNodalPoint] = useState<boolean>(false);
 
@@ -121,7 +121,7 @@ export const BHADesignTab: FC<BHADesignTabProps> = ({ nodalColors }) => {
           <div className="space-y-2">
             <h1 className="text-title-1 font-bold text-foreground flex items-center gap-3">
               <Activity className="h-8 w-8 text-system-blue" />
-              BHA Builder
+              WBD Builder
             </h1>
           </div>
 

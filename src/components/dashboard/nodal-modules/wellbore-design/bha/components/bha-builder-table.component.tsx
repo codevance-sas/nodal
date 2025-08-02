@@ -420,7 +420,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
       id: nanoid(),
       type: '',
       top,
-      count: 0,
+      count: 1,
       length: 0,
       bottom: top,
       idVal: 0,
@@ -628,17 +628,22 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
     {
       id: 'select',
       header: 'Select',
-      Cell: ({ row }) => (
-        <Checkbox
-          checked={selected.has(row.original.id)}
-          onCheckedChange={checked => {
-            const next = new Set(selected);
-            if (checked) next.add(row.original.id);
-            else next.delete(row.original.id);
-            setSelected(next);
-          }}
-        />
-      ),
+      Cell: ({ row }) => {
+        console.log('[BhaBuilderTable.select] row', row);
+        return (
+          <div className="flex items-center justify-center w-full h-full">
+            <Checkbox
+              checked={selected.has(row.original.id)}
+              onCheckedChange={checked => {
+                const next = new Set(selected);
+                if (checked) next.add(row.original.id);
+                else next.delete(row.original.id);
+                setSelected(next);
+              }}
+            />
+          </div>
+        );
+      },
       enableSorting: false,
       size: 25,
     },
@@ -681,6 +686,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
       size: 50,
       Cell: ({ row }) => (
         <NumberInput
+          disabled={row.index === 0}
           hideControls
           value={getCurrentValue(row.original.id, 'top') as number}
           onChange={val => handleFieldChange(row.original.id, 'top', val ?? 0)}
@@ -854,13 +860,14 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
       enableSorting: false,
     },
   ].map(
-    column =>
+    (column: any) =>
       ({
         ...column,
         enableSorting: false,
         mantineTableHeadCellProps: {
           align: 'center',
         },
+        ...(column.id === 'select' ? {} : { minSize: 120 }),
       } as MRT_ColumnDef<BhaRowData>)
   );
 
@@ -875,7 +882,10 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
               <Calculator className="h-4 w-4 text-system-blue" />
               <div className="space-y-1 space-x-1">
                 <Label className="text-xs text-muted-foreground">
-                  Net {nameTable.charAt(0).toUpperCase() + nameTable.slice(1).toLowerCase()} Length [ft]
+                  Net{' '}
+                  {nameTable.charAt(0).toUpperCase() +
+                    nameTable.slice(1).toLowerCase()}{' '}
+                  Length [ft]
                 </Label>
                 <Badge variant="secondary" className="font-mono font-bold">
                   {calculateNetLength.toFixed(2)}

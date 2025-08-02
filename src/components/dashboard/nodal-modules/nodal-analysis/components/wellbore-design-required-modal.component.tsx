@@ -19,7 +19,6 @@ export const WellboreDesignRequiredModal: React.FC<
     if (onRedirect) {
       onRedirect();
     } else {
-      // TODO: Implement navigation - currently shows alert
       alert('Navigating to Wellbore Design...');
     }
   };

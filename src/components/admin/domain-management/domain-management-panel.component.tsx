@@ -151,7 +151,8 @@ export const DomainManagementPanel = () => {
   };
 
   const validateDomain = (domain: string) => {
-    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    const domainRegex =
+      /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
     return domainRegex.test(domain);
   };
 
@@ -168,10 +169,7 @@ export const DomainManagementPanel = () => {
             Manage allowed domains for user registration
           </p>
         </div>
-        <Dialog
-          open={isAddDialogOpen}
-          onOpenChange={setIsAddDialogOpen}
-        >
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -210,7 +208,10 @@ export const DomainManagementPanel = () => {
                   id="description"
                   value={formData.description}
                   onChange={e =>
-                    setFormData(prev => ({ ...prev, description: e.target.value }))
+                    setFormData(prev => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
                   }
                   placeholder="Enter domain description"
                   required
@@ -225,9 +226,13 @@ export const DomainManagementPanel = () => {
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
-                  disabled={isAdding || !validateDomain(formData.domain) || !formData.description.trim()}
+                <Button
+                  type="submit"
+                  disabled={
+                    isAdding ||
+                    !validateDomain(formData.domain) ||
+                    !formData.description.trim()
+                  }
                 >
                   {isAdding ? 'Adding...' : 'Add Domain'}
                 </Button>
@@ -298,6 +303,7 @@ export const DomainManagementPanel = () => {
                             setSelectedDomain(domain.domain);
                             setIsConfirmDialogOpen(true);
                           }}
+                          className="hover:bg-destructive"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Remove Domain
@@ -349,8 +355,8 @@ export const DomainManagementPanel = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove the domain "{selectedDomain}" from the allowed list. 
-              Users with this domain will no longer be able to register.
+              This will remove the domain "{selectedDomain}" from the allowed
+              list. Users with this domain will no longer be able to register.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
