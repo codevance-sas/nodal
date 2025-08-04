@@ -4,7 +4,31 @@ export interface recalcProps {
   rows: BhaRowData[];
   initialTop: number;
   drafts: Map<string, Partial<BhaRowData>>;
+  averageTubingJoints: number;
 }
+
+/**
+ * Checks if a row type is tubing-related
+ * @param type - The type string to check
+ * @returns True if the type contains 'tubing' (case-insensitive)
+ */
+const isTubingType = (type: string): boolean => {
+  if (!type || typeof type !== 'string') return false;
+  return type.toLowerCase().includes('tubing');
+};
+
+/**
+ * Validates numeric values for calculations
+ * @param value - The value to validate
+ * @param defaultValue - Default value if validation fails
+ * @returns Valid number or default
+ */
+const validateNumericValue = (value: number | undefined | null, defaultValue: number = 0): number => {
+  if (value === undefined || value === null || isNaN(value) || value < 0) {
+    return defaultValue;
+  }
+  return value;
+};
 
 /**
  * Recalculates top and bottom values for BHA rows.
@@ -17,6 +41,7 @@ export const recalcTopBtmBha = ({
   rows,
   initialTop,
   drafts,
+  averageTubingJoints,
 }: recalcProps): BhaRowData[] => {
   if (rows.length === 0) return [];
 
@@ -49,24 +74,59 @@ export const recalcTopBtmBha = ({
     let bottom: number;
     let length = mergedRow.length;
 
-    if (draft.bottom !== undefined) {
-      // If bottom is explicitly set, use it and recalculate length if needed
-      bottom = draft.bottom;
-      if (mergedRow.count > 0) {
-        length = (bottom - top) / mergedRow.count;
+    // Check if this is a tubing type row
+    const isTubing = isTubingType(mergedRow.type);
+    
+    if (isTubing) {
+      // For tubing types, always use average tubing joints for length calculation
+      const validatedAverageJoints = validateNumericValue(averageTubingJoints, 30); // Default 30ft if invalid
+      const validatedCount = validateNumericValue(mergedRow.count, 1);
+      
+      length = validatedAverageJoints;
+      
+      // If bottom is explicitly set in draft, respect it but recalculate length
+      if (draft.bottom !== undefined) {
+        bottom = validateNumericValue(draft.bottom, top);
+        // Recalculate length based on the explicit bottom value
+        if (validatedCount > 0) {
+          length = (bottom - top) / validatedCount;
+        }
+      } else {
+        // Auto-calculate bottom for tubing using average joints
+        bottom = top + length * validatedCount;
       }
     } else {
-      // Calculate bottom from count and length
-      bottom = top + mergedRow.count * length;
+      // Non-tubing types follow original logic
+      if (draft.bottom !== undefined) {
+        // If bottom is explicitly set, use it and recalculate length if needed
+        bottom = validateNumericValue(draft.bottom, top);
+        if (mergedRow.count > 0) {
+          length = (bottom - top) / mergedRow.count;
+        }
+      } else {
+        // Calculate bottom from count and length
+        const validatedLength = validateNumericValue(length, 0);
+        const validatedCount = validateNumericValue(mergedRow.count, 1);
+        bottom = top + validatedCount * validatedLength;
+        length = validatedLength;
+      }
     }
 
     lastBottom = bottom;
 
+    // Ensure all calculated values are valid
+    const finalTop = validateNumericValue(top, initialTop);
+    const finalBottom = validateNumericValue(bottom, finalTop);
+    const finalLength = validateNumericValue(length, 0);
+    
+    // Additional validation: bottom should always be >= top
+    const validatedBottom = finalBottom < finalTop ? finalTop : finalBottom;
+    
     return {
       ...mergedRow,
-      top,
-      bottom,
-      length,
+      top: finalTop,
+      bottom: validatedBottom,
+      length: finalLength,
     };
   });
 };

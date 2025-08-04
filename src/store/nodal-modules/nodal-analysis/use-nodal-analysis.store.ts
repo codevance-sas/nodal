@@ -232,7 +232,7 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
         bubblePointsMap,
         recommendedMethod,
         result,
-        computedGOR
+        inputs.gor ?? computedGOR
       );
 
       const fluidProperties = {
@@ -246,18 +246,19 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
         temperature_gradient:
           pvtInputsWithDefaults.temperature_gradient ?? 0.015,
         bubble_point: bubblePoint,
-        gor: computedGOR,
+        gor: inputs.gor ?? computedGOR,
       };
 
       await get().calculateIPRCurve(bubblePoint);
 
       set(state => ({
-        pvtResults: result,
-        pvtInputs: pvtInputsWithDefaults,
+        activeSection: 'hydraulics',
+        completeness: { ...state.completeness, pvt: true },
+        computedGOR: inputs.gor ?? computedGOR,
         fluidProperties,
         pvtCurveData: curvesData,
-        completeness: { ...state.completeness, pvt: true },
-        activeSection: 'hydraulics',
+        pvtInputs: pvtInputsWithDefaults,
+        pvtResults: result,
       }));
 
       return result;

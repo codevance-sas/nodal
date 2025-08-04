@@ -19,7 +19,6 @@ import {
   Loader2,
   Zap,
   Gauge,
-  Activity,
   FlaskConical,
 } from 'lucide-react';
 import { CorrelationSelector } from './correlation-selector.component';
@@ -388,7 +387,6 @@ export const NodalAnalysisHydraulicsModule: React.FC<HydraulicsModuleProps> = ({
               {/* Fluid Parameters */}
               <div className="space-y-4">
                 <h3 className="text-headline font-semibold text-foreground flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-system-green" />
                   Fluid Parameters
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

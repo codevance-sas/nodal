@@ -19,12 +19,13 @@ export interface PVTFormData {
   stock_pressure?: number;
   temperature: number;
   step_size?: number;
-  pb: number;
+  pb: number | null;
   co2_frac: number;
   h2s_frac: number;
   n2_frac: number;
   correlations: Record<string, any>;
   ift: number;
+  water_gravity?: number;
 }
 
 export interface HydraulicsFormData {

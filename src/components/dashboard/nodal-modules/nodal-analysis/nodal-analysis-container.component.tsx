@@ -19,7 +19,7 @@ import {
   BhaDiagramKonvaProps,
 } from '../wellbore-design/bha/components/bha-diagram-konva.component';
 import { Button } from '@/components/ui/button';
-import { Activity, Settings, Table } from 'lucide-react';
+import { Settings, Table } from 'lucide-react';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BhaBuilderTable } from '../wellbore-design/bha/components/bha-builder-table.component';
@@ -143,7 +143,9 @@ export const NodalAnalysisContainer: React.FC = () => {
             {activeSection === 'hydraulics' && (
               <NodalAnalysisHydraulicsModule segments={mergedRows} />
             )}
-            {activeSection === 'results' && <NodalAnalysisChartsModule segments={mergedRows} />}
+            {activeSection === 'results' && (
+              <NodalAnalysisChartsModule segments={mergedRows} />
+            )}
             {activeSection === 'correlations' && (
               <NodalAnalysisMultiCorrelationModule segments={mergedRows} />
             )}
@@ -229,14 +231,12 @@ export const NodalAnalysisContainer: React.FC = () => {
                           value={BhaCasingBuilderTab.BHA}
                           className="data-[state=active]:bg-system-blue/10 data-[state=active]:text-system-blue transition-all duration-200 ease-apple"
                         >
-                          <Activity className="h-4 w-4 mr-2" />
                           BHA
                         </TabsTrigger>
                         <TabsTrigger
                           value={BhaCasingBuilderTab.CASING}
                           className="data-[state=active]:bg-system-blue/10 data-[state=active]:text-system-blue transition-all duration-200 ease-apple"
                         >
-                          <Settings className="h-4 w-4 mr-2" />
                           CASING
                         </TabsTrigger>
                       </TabsList>

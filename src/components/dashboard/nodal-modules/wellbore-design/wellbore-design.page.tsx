@@ -1,6 +1,6 @@
 'use client';
 
-import { Activity, Navigation, Settings } from 'lucide-react';
+import { Navigation, Settings } from 'lucide-react';
 import { appColors } from '@/core/common/constant/app-colors.constant';
 import { AppLoader } from '@/components/common/app-loader.component';
 import { BHADesignTab } from './bha-design-tab.component';
@@ -50,14 +50,12 @@ export const WellboreDesignModule: FC = () => {
                   value={WellboreTab.BHA}
                   className="data-[state=active]:bg-system-blue/10 data-[state=active]:text-system-blue data-[state=active]:shadow-sm transition-all duration-200 ease-apple text-callout font-medium rounded-lg"
                 >
-                  <Activity className="h-4 w-4 mr-2" />
                   BHA Design
                 </TabsTrigger>
                 <TabsTrigger
                   value={WellboreTab.SURVEY}
                   className="data-[state=active]:bg-system-blue/10 data-[state=active]:text-system-blue data-[state=active]:shadow-sm transition-all duration-200 ease-apple text-callout font-medium rounded-lg"
                 >
-                  <Navigation className="h-4 w-4 mr-2" />
                   Survey
                 </TabsTrigger>
               </TabsList>

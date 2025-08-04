@@ -28,7 +28,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { recalculateVLPFromSavedData } from '@/core/nodal-modules/nodal-analysis/util/recalculate-vlp.util';
 import type { Segments } from '@/core/nodal-modules/nodal-analysis/util/merge-bha-and-casing-rows.util';
 
 interface NodalAnalysisChartsModuleProps {
@@ -57,19 +56,48 @@ export const NodalAnalysisChartsModule: React.FC<
   const { currentFormSet, quickSave } = useFormHydraulicsPersistenceStore();
 
   const handleRecalculateVLP = async () => {
-    if (!currentFormSet) {
-      quickSave(
-        iprInputs as any,
-        pvtInputs as any,
-        hydraulicsInputs,
-        correlationMethod
-      );
-      return;
-    }
-
     setIsRecalculating(true);
+
     try {
-      await recalculateVLPFromSavedData(currentFormSet, segments);
+      console.log('🔄 Starting VLP recalculation...');
+
+      // Usar los datos directamente del store principal, no de persistencia
+      const {
+        setIprInputs,
+        setPvtInputs,
+        setHydraulicsInputs,
+        setCorrelationMethod,
+        setInclination,
+        setRoughness,
+        calculateIPRCurve,
+        calculatePVTProperties,
+        calculateHydraulicsCurve,
+      } = useAnalysisStore.getState();
+
+      // Recalcular usando los datos actuales del store
+      if (iprInputs) {
+        setIprInputs(iprInputs);
+      }
+
+      if (pvtInputs) {
+        setPvtInputs(pvtInputs);
+        await calculatePVTProperties(pvtInputs);
+      }
+
+      if (correlationMethod) {
+        setCorrelationMethod(correlationMethod);
+      }
+
+      if (hydraulicsInputs) {
+        setHydraulicsInputs(hydraulicsInputs);
+        setInclination(hydraulicsInputs.inclination);
+        setRoughness(hydraulicsInputs.roughness);
+
+        await calculateIPRCurve(hydraulicsInputs.bubble_point);
+        await calculateHydraulicsCurve(hydraulicsInputs, segments);
+      }
+
+      console.log('✅ VLP recalculation completed successfully');
     } catch (error) {
       console.error('Error recalculating VLP:', error);
     } finally {
@@ -78,9 +106,7 @@ export const NodalAnalysisChartsModule: React.FC<
   };
 
   const canRecalculate =
-    completeness.ipr &&
-    completeness.pvt &&
-    (currentFormSet || completeness.hydraulics);
+    completeness.ipr && completeness.pvt && iprInputs && hydraulicsInputs;
 
   if (loading.hydraulics) {
     return (

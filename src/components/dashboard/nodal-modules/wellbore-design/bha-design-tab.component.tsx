@@ -1,5 +1,5 @@
 'use client';
-import { Activity, Settings, Table } from 'lucide-react';
+import { Table } from 'lucide-react';
 import { AppColors } from '@/core/common/types/app-colors.type';
 import { Badge } from '@/components/ui/badge';
 import { BhaBuilderTable } from './bha/components/bha-builder-table.component';
@@ -120,7 +120,6 @@ export const BHADesignTab: FC<BHADesignTabProps> = ({ nodalColors }) => {
         <div className="flex flex-wrap items-center justify-around gap-3 w-full">
           <div className="space-y-2">
             <h1 className="text-title-1 font-bold text-foreground flex items-center gap-3">
-              <Activity className="h-8 w-8 text-system-blue" />
               WBD Builder
             </h1>
           </div>
@@ -274,14 +273,12 @@ export const BHADesignTab: FC<BHADesignTabProps> = ({ nodalColors }) => {
                       value={BhaCasingBuilderTab.BHA}
                       className="data-[state=active]:bg-system-blue/10 data-[state=active]:text-system-blue transition-all duration-200 ease-apple"
                     >
-                      <Activity className="h-4 w-4 mr-2" />
                       BHA
                     </TabsTrigger>
                     <TabsTrigger
                       value={BhaCasingBuilderTab.CASING}
                       className="data-[state=active]:bg-system-blue/10 data-[state=active]:text-system-blue transition-all duration-200 ease-apple"
                     >
-                      <Settings className="h-4 w-4 mr-2" />
                       CASING
                     </TabsTrigger>
                   </TabsList>
@@ -348,6 +345,7 @@ export const BHADesignTab: FC<BHADesignTabProps> = ({ nodalColors }) => {
                             validate={validate}
                             averageTubingJoints={averageTubingJoints}
                             setAverageTubingJoints={setAverageTubingJoints}
+                            isAverageTubingJointsVisible={true}
                           />
                         </div>
                       </TabsContent>

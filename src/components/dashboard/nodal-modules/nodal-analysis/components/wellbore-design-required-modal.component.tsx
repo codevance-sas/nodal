@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
@@ -41,9 +40,6 @@ export const WellboreDesignRequiredModal: React.FC<
             'flex items-center gap-3'
           )}
         >
-          <div className="p-2 bg-white/20 rounded-full">
-            <Activity className="h-5 w-5" />
-          </div>
           <h2 className="text-title-2 font-semibold">
             Wellbore Design Required
           </h2>
@@ -52,10 +48,6 @@ export const WellboreDesignRequiredModal: React.FC<
         {/* Content */}
         <div className="p-6 space-y-6 text-center">
           <div className="space-y-4">
-            <div className="mx-auto w-16 h-16 bg-system-blue/10 rounded-full flex items-center justify-center">
-              <Activity className="h-8 w-8 text-system-blue" />
-            </div>
-
             <div className="space-y-3">
               <h3 className="text-title-3 font-semibold text-foreground">
                 Complete Wellbore Design First
@@ -88,7 +80,6 @@ export const WellboreDesignRequiredModal: React.FC<
                 'flex items-center justify-center gap-2'
               )}
             >
-              <Activity className="h-4 w-4" />
               Go to Wellbore Design
             </Link>
           </div>
