@@ -1,10 +1,11 @@
-import { FC } from 'react';
+import { FC, useState, useEffect } from 'react';
 import { Plus, Trash2, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { NumberInput } from '@mantine/core';
 import { MetricCard } from './metric-card.component';
 import { Label } from '@/components/ui/label';
+import { useDebounce } from '@/hooks/use-debounce';
 
 interface TableHeaderControlsProps {
   averageTubingJoints: number;
@@ -27,20 +28,29 @@ export const TableHeaderControls: FC<TableHeaderControlsProps> = ({
   onRemoveSelected,
   onAverageTubingJointsChange,
 }) => {
+  const [localValue, setLocalValue] = useState<number>(averageTubingJoints);
+
+  const debouncedValue = useDebounce(localValue, 500);
+
   const formatTableName = (name: string): string => {
     return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
   };
 
-  const handleAverageTubingJointsChange = (value: number) => {
-    const validatedValue = isNaN(value) || value < 0 ? 0 : value;
+  useEffect(() => {
+    setLocalValue(averageTubingJoints);
+  }, [averageTubingJoints]);
 
-    onAverageTubingJointsChange(validatedValue);
-  };
+  useEffect(() => {
+    if (debouncedValue !== averageTubingJoints) {
+      const validatedValue =
+        isNaN(debouncedValue) || debouncedValue < 0 ? 0 : debouncedValue;
+      onAverageTubingJointsChange(validatedValue);
+    }
+  }, [debouncedValue, averageTubingJoints, onAverageTubingJointsChange]);
 
   const handleNumberInputChange = (val: number | '') => {
-    // Handle Mantine NumberInput value which can be number or empty string
     const numericValue = Number(val);
-    handleAverageTubingJointsChange(numericValue);
+    setLocalValue(numericValue);
   };
 
   return (
@@ -51,9 +61,7 @@ export const TableHeaderControls: FC<TableHeaderControlsProps> = ({
     >
       <CardContent className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          {/* Left side: Statistics and Controls */}
           <div className="flex items-center gap-4 flex-wrap">
-            {/* Net Length Metric */}
             <MetricCard
               icon={Calculator}
               label={`Net ${formatTableName(nameTable)} Length [ft]`}
@@ -63,7 +71,6 @@ export const TableHeaderControls: FC<TableHeaderControlsProps> = ({
               )} length: ${netLength.toFixed(2)} feet`}
             />
 
-            {/* Average Tubing Joints Input */}
             {isAverageTubingJointsVisible && (
               <Card
                 className="bg-background/80 border-border/50 transition-all duration-200 hover:bg-background/90 hover:border-border/70"
@@ -78,7 +85,7 @@ export const TableHeaderControls: FC<TableHeaderControlsProps> = ({
                     Average Tubing Joints
                   </Label>
                   <NumberInput
-                    value={averageTubingJoints}
+                    value={localValue}
                     onChange={handleNumberInputChange}
                     placeholder="Avg Joints"
                     hideControls
@@ -104,7 +111,6 @@ export const TableHeaderControls: FC<TableHeaderControlsProps> = ({
             )}
           </div>
 
-          {/* Right side: Action Buttons */}
           <div
             className="flex items-center gap-2"
             role="group"

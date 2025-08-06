@@ -10,11 +10,11 @@ export interface recalcProps {
 /**
  * Checks if a row type is tubing-related
  * @param type - The type string to check
- * @returns True if the type contains 'tubing' (case-insensitive)
+ * @returns True if the type is 'tubing' (case-sensitive)
  */
 const isTubingType = (type: string): boolean => {
   if (!type || typeof type !== 'string') return false;
-  return type.toLowerCase().includes('tubing');
+  return type.toLowerCase() === 'tubing';
 };
 
 /**
@@ -23,7 +23,10 @@ const isTubingType = (type: string): boolean => {
  * @param defaultValue - Default value if validation fails
  * @returns Valid number or default
  */
-const validateNumericValue = (value: number | undefined | null, defaultValue: number = 0): number => {
+const validateNumericValue = (
+  value: number | undefined | null,
+  defaultValue: number = 0
+): number => {
   if (value === undefined || value === null || isNaN(value) || value < 0) {
     return defaultValue;
   }
@@ -76,14 +79,17 @@ export const recalcTopBtmBha = ({
 
     // Check if this is a tubing type row
     const isTubing = isTubingType(mergedRow.type);
-    
+
     if (isTubing) {
       // For tubing types, always use average tubing joints for length calculation
-      const validatedAverageJoints = validateNumericValue(averageTubingJoints, 30); // Default 30ft if invalid
+      const validatedAverageJoints = validateNumericValue(
+        averageTubingJoints,
+        30
+      ); // Default 30ft if invalid
       const validatedCount = validateNumericValue(mergedRow.count, 1);
-      
+
       length = validatedAverageJoints;
-      
+
       // If bottom is explicitly set in draft, respect it but recalculate length
       if (draft.bottom !== undefined) {
         bottom = validateNumericValue(draft.bottom, top);
@@ -118,10 +124,10 @@ export const recalcTopBtmBha = ({
     const finalTop = validateNumericValue(top, initialTop);
     const finalBottom = validateNumericValue(bottom, finalTop);
     const finalLength = validateNumericValue(length, 0);
-    
+
     // Additional validation: bottom should always be >= top
     const validatedBottom = finalBottom < finalTop ? finalTop : finalBottom;
-    
+
     return {
       ...mergedRow,
       top: finalTop,

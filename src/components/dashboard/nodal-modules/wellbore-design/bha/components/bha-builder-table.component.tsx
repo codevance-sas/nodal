@@ -91,8 +91,8 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
   useEffect(() => {
     if (rows.length > 0 && averageTubingJoints > 0) {
       // Check if any rows are tubing type
-      const hasTubingRows = rows.some(row =>
-        row.type.toLowerCase().includes('tubing')
+      const hasTubingRows = rows.some(
+        row => row.type.toLowerCase() === 'tubing'
       );
 
       if (hasTubingRows) {
