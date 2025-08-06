@@ -10,6 +10,7 @@ import {
   MantineReactTable,
   type MRT_ColumnDef,
   type MRT_Row,
+  type MRT_Cell,
 } from 'mantine-react-table';
 import { useTheme } from 'next-themes';
 import { nanoid } from 'nanoid';
@@ -31,26 +32,28 @@ import {
   type KeyboardEvent,
   useEffect,
 } from 'react';
-import { Plus, Trash2, Calculator } from 'lucide-react';
-import { Button as ShadcnButton } from '@/components/ui/button';
 
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+import { Button as ShadcnButton } from '@/components/ui/button';
+import { TableHeaderControls } from './table-header-controls.component';
+
 import { BhaRowData } from '@/core/nodal-modules/wellbore-design/types/bha-builder.type';
 import { recalcProps } from '@/core/nodal-modules/wellbore-design/util/bha-recalc.util';
+import { useBhaStore } from '@/store/nodal-modules/wellbore-design/use-bha.store';
+import { Input } from '@/components/ui/input';
 
 interface BhaBuilderTableProps {
   addRow: (row: BhaRowData) => void;
+  averageTubingJoints: number;
   initialTop: number;
+  isAverageTubingJointsVisible?: boolean;
   nameTable: string;
   options: string[];
   recalcTopBtm: (data: recalcProps) => BhaRowData[];
   rows: BhaRowData[];
+  setAverageTubingJoints: (joints: number) => void;
   setInitialTop: (top: number) => void;
   setRows: (rows: BhaRowData[]) => void;
   validate: (rows: BhaRowData[]) => string[];
-  averageTubingJoints: number;
-  setAverageTubingJoints: (joints: number) => void;
 }
 
 interface ValidationState {
@@ -67,6 +70,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
   rows,
   setRows,
   validate,
+  isAverageTubingJointsVisible,
 }) => {
   const { theme } = useTheme();
   const [drafts, setDrafts] = useState<Map<string, Partial<BhaRowData>>>(
@@ -78,9 +82,38 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
     fieldErrors: new Map(),
     rowErrors: new Set(),
   });
+  const { averageTubingJoints, setAverageTubingJoints } = useBhaStore();
 
   // Track which fields are being actively edited
   const [activeFields, setActiveFields] = useState<Set<string>>(new Set());
+
+  // Automatically recalculate rows when averageTubingJoints changes
+  useEffect(() => {
+    if (rows.length > 0 && averageTubingJoints > 0) {
+      // Check if any rows are tubing type
+      const hasTubingRows = rows.some(
+        row => row.type.toLowerCase() === 'tubing'
+      );
+
+      if (hasTubingRows) {
+        // Trigger recalculation for tubing rows
+        const recalculated = recalcTopBtm({
+          rows,
+          initialTop,
+          drafts: new Map(),
+          averageTubingJoints,
+        });
+
+        // Validate the recalculated rows
+        const errors = validate(recalculated);
+        if (errors.length === 0) {
+          setRows(recalculated);
+          updateValidationState(recalculated);
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [averageTubingJoints]);
 
   // Debounce timers for each field
   const debounceTimers = useRef<Map<string, NodeJS.Timeout>>(new Map());
@@ -286,6 +319,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
         rows: updatedRows,
         initialTop,
         drafts: new Map(),
+        averageTubingJoints,
       });
 
       // Validate
@@ -308,6 +342,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
     },
     [
       activeFields,
+      averageTubingJoints,
       drafts,
       initialTop,
       recalcTopBtm,
@@ -454,6 +489,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
         rows: newRows,
         initialTop,
         drafts: new Map(),
+        averageTubingJoints,
       });
 
       setRows(recalc);
@@ -465,6 +501,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
       updateValidationState(recalc);
     },
     [
+      averageTubingJoints,
       rows,
       initialTop,
       recalcTopBtm,
@@ -501,12 +538,14 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
       rows: filtered,
       initialTop,
       drafts: new Map(),
+      averageTubingJoints,
     });
 
     setRows(recalc);
     setSelected(new Set());
     updateValidationState(recalc);
   }, [
+    averageTubingJoints,
     selected,
     rows,
     initialTop,
@@ -628,7 +667,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
     {
       id: 'select',
       header: 'Select',
-      Cell: ({ row }) => {
+      Cell: ({ row }: MRT_Cell<BhaRowData>) => {
         console.log('[BhaBuilderTable.select] row', row);
         return (
           <div className="flex items-center justify-center w-full h-full">
@@ -651,7 +690,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
       accessorKey: 'type',
       header: 'TYPE',
       size: 50,
-      Cell: ({ row }) => (
+      Cell: ({ row }: MRT_Cell<BhaRowData>) => (
         <Select
           value={getCurrentValue(row.original.id, 'type') as string}
           onValueChange={value => {
@@ -684,7 +723,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
       accessorKey: 'top',
       header: 'TOP [ft]',
       size: 50,
-      Cell: ({ row }) => (
+      Cell: ({ row }: MRT_Cell<BhaRowData>) => (
         <NumberInput
           disabled={row.index === 0}
           hideControls
@@ -704,7 +743,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
       accessorKey: 'count',
       header: 'COUNT',
       size: 50,
-      Cell: ({ row }) => (
+      Cell: ({ row }: MRT_Cell<BhaRowData>) => (
         <NumberInput
           hideControls
           value={getCurrentValue(row.original.id, 'count') as number}
@@ -724,7 +763,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
       accessorKey: 'length',
       header: 'L [ft]',
       size: 50,
-      Cell: ({ row }) => (
+      Cell: ({ row }: MRT_Cell<BhaRowData>) => (
         <NumberInput
           hideControls
           value={getCurrentValue(row.original.id, 'length') as number}
@@ -745,7 +784,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
       accessorKey: 'od',
       header: 'OD [in]',
       size: 50,
-      Cell: ({ row }) => (
+      Cell: ({ row }: MRT_Cell<BhaRowData>) => (
         <NumberInput
           hideControls
           value={getCurrentValue(row.original.id, 'od') as number}
@@ -764,7 +803,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
       accessorKey: 'idVal',
       header: 'ID [in]',
       size: 50,
-      Cell: ({ row }) => (
+      Cell: ({ row }: MRT_Cell<BhaRowData>) => (
         <NumberInput
           hideControls
           value={getCurrentValue(row.original.id, 'idVal') as number}
@@ -785,7 +824,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
       accessorKey: 'bottom',
       header: 'BTM [ft]',
       size: 50,
-      Cell: ({ row }) => (
+      Cell: ({ row }: MRT_Cell<BhaRowData>) => (
         <NumberInput
           hideControls
           value={getCurrentValue(row.original.id, 'bottom') as number}
@@ -806,7 +845,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
       accessorKey: 'desc',
       header: 'DESC',
       size: 50,
-      Cell: ({ row }) => (
+      Cell: ({ row }: MRT_Cell<BhaRowData>) => (
         <TextInput
           value={getCurrentValue(row.original.id, 'desc') as string}
           onChange={e =>
@@ -823,7 +862,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
     {
       header: 'Actions',
       size: 100,
-      Cell: ({ row }) => (
+      Cell: ({ row }: MRT_Cell<BhaRowData>) => (
         <Group>
           <Button
             compact
@@ -873,50 +912,17 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
 
   return (
     <div className="w-full h-[100%] overflow-auto transition-colors duration-200 bg-background rounded-xl p-0">
-      {/* Header Controls - shadcn/ui */}
-      <div className="bg-card/50 backdrop-blur-sm rounded-lg border border-border/50 p-4 mb-4 transition-all duration-200">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          {/* Left side: Stats */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center space-x-2 bg-background/80 rounded-lg p-3 border border-border/50">
-              <Calculator className="h-4 w-4 text-system-blue" />
-              <div className="space-y-1 space-x-1">
-                <Label className="text-xs text-muted-foreground">
-                  Net{' '}
-                  {nameTable.charAt(0).toUpperCase() +
-                    nameTable.slice(1).toLowerCase()}{' '}
-                  Length [ft]
-                </Label>
-                <Badge variant="secondary" className="font-mono font-bold">
-                  {calculateNetLength.toFixed(2)}
-                </Badge>
-              </div>
-            </div>
-          </div>
-
-          {/* Right side: Action buttons */}
-          <div className="flex items-center gap-2">
-            <ShadcnButton
-              onClick={addLocalRow}
-              size="sm"
-              className="transition-all duration-200 hover:scale-105"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Add Row
-            </ShadcnButton>
-            <ShadcnButton
-              variant="destructive"
-              size="sm"
-              onClick={removeSelected}
-              disabled={selected.size === 0}
-              className="transition-all duration-200 hover:scale-105"
-            >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Remove Selected ({selected.size})
-            </ShadcnButton>
-          </div>
-        </div>
-      </div>
+      {/* Header Controls - Improved with reusable components */}
+      <TableHeaderControls
+        nameTable={nameTable}
+        netLength={calculateNetLength}
+        selectedCount={selected.size}
+        isAverageTubingJointsVisible={isAverageTubingJointsVisible}
+        averageTubingJoints={averageTubingJoints}
+        onAddRow={addLocalRow}
+        onRemoveSelected={removeSelected}
+        onAverageTubingJointsChange={setAverageTubingJoints}
+      />
 
       <div className="backdrop-blur-sm rounded-xl overflow-hidden shadow-xl transition-colors duration-200 bg-card border border-border">
         <MantineProvider
@@ -948,6 +954,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
                     rows: newData,
                     initialTop,
                     drafts: new Map(),
+                    averageTubingJoints,
                   });
                   const errors = validate(recalc);
                   if (errors.length > 0) {

@@ -10,15 +10,7 @@ import {
 } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/components/ui/sidebar';
-import {
-  Home,
-  Database,
-  Table,
-  Drill,
-  Thermometer,
-  SlidersHorizontal,
-  UserCog,
-} from 'lucide-react';
+import { AudioWaveform, GitMerge } from 'lucide-react';
 
 export function SidebarNav() {
   const pathname = usePathname();
@@ -31,34 +23,34 @@ export function SidebarNav() {
   };
 
   const navItems = [
-    {
+    /* {
       title: 'User Data',
       items: [
         { title: 'Database', href: '#', icon: Database },
         { title: 'My Data Tables', href: '#', icon: Table },
       ],
-    },
+    }, */
     {
       title: 'Builders',
       items: [
         {
           title: 'Wellbore Design',
           href: '/dashboard/nodal-modules/wellbore-design',
-          icon: Drill,
+          icon: AudioWaveform,
         },
         {
           title: 'Nodal Analysis',
           href: '/dashboard/nodal-modules/nodal-analysis',
-          icon: Thermometer,
+          icon: GitMerge,
         },
       ],
     },
-    {
+    /* {
       title: 'Pre Builders',
       items: [
         { title: 'operators', href: '/dashboard/operators', icon: UserCog },
       ],
-    },
+    }, */
   ];
 
   const getActiveGroups = () => {
@@ -74,15 +66,6 @@ export function SidebarNav() {
   return (
     <nav className="px-4 mt-4 space-y-2 overflow-auto h-[100%] flex flex-col justify-between">
       <div>
-        <Link href="/dashboard" passHref onClick={handleLinkClick}>
-          <Button
-            variant={pathname === '/dashboard' ? 'tinted' : 'plain'}
-            className="w-full justify-start gap-2 hover:bg-system-blue/10 hover:text-system-blue transition-colors duration-200"
-          >
-            <Home className="h-4 w-4" />
-            Home
-          </Button>
-        </Link>
         <Accordion
           type="multiple"
           defaultValue={getActiveGroups()}

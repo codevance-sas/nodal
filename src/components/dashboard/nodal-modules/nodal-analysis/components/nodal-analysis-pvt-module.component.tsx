@@ -19,6 +19,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { useAnalysisStore } from '@/store/nodal-modules/nodal-analysis/use-nodal-analysis.store';
+import { useFormHydraulicsPersistenceStore } from '@/store/nodal-modules/nodal-analysis/use-form-hydraulics-persistence.store';
 import { cn } from '@/lib/utils';
 import {
   CheckCircle,
@@ -33,14 +34,18 @@ import {
 } from 'lucide-react';
 import { InputField } from '@/components/custom/input-field/input-field.component';
 
-// Placeholder components for complex subcomponents
 const PVTForm: React.FC<{
   initialInputs: any;
   onSubmit: (inputs: any) => void;
+  onFieldChange?: (name: string, value: number) => void;
   initialPb?: number;
-}> = ({ initialInputs, onSubmit, initialPb }) => {
+}> = ({ initialInputs, onSubmit, onFieldChange, initialPb }) => {
   const [formData, setFormData] = useState(initialInputs);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    setFormData(initialInputs);
+  }, [initialInputs]);
 
   const fields = [
     { name: 'api', label: 'API Gravity', unit: '°API' },
@@ -49,6 +54,7 @@ const PVTForm: React.FC<{
     { name: 'water_gravity', label: 'Water Gravity', unit: 'specific' },
     { name: 'stock_temp', label: 'Stock Tank Temperature', unit: '°F' },
     { name: 'stock_pressure', label: 'Stock Tank Pressure', unit: 'psia' },
+    { name: 'gor', label: 'GOR', unit: 'scf/stb' },
   ];
 
   const validateField = (name: string, value: number) => {
@@ -76,6 +82,13 @@ const PVTForm: React.FC<{
           delete newErrors[name];
         }
         break;
+      case 'gor':
+        if (value <= 0 || value > 5000) {
+          newErrors[name] = 'GOR should be between 1-5000 scf/stb';
+        } else {
+          delete newErrors[name];
+        }
+        break;
     }
 
     setErrors(newErrors);
@@ -84,6 +97,10 @@ const PVTForm: React.FC<{
   const handleFieldChange = (name: string, value: number) => {
     setFormData((prev: any) => ({ ...prev, [name]: value }));
     validateField(name, value);
+
+    if (onFieldChange) {
+      onFieldChange(name, value);
+    }
   };
 
   const handleSubmit = () => {
@@ -247,13 +264,63 @@ export const NodalAnalysisPvtModule: React.FC = () => {
     loading,
     errors,
     iprInputs,
-    computedGOR,
     fluidProperties: fluidProps,
+    setPvtInputs: setStorePvtInputs,
   } = useAnalysisStore();
 
-  const [formInputs, setFormInputs] = useState<Record<string, any> | null>(
-    null
-  );
+  const { getQuickSaveData, quickSave } = useFormHydraulicsPersistenceStore();
+
+  const getInitialFormInputs = () => {
+    const savedData = getQuickSaveData();
+    const savedPvtData = savedData?.pvtData;
+
+    const defaults = {
+      api: 35,
+      gas_gravity: 0.7,
+      temperature: 180,
+      gor: 500,
+      water_gravity: 1.05,
+      pb: null as number | null,
+      stock_temp: 60,
+      stock_pressure: 14.7,
+      co2_frac: 0,
+      h2s_frac: 0,
+      n2_frac: 0,
+      correlations: {
+        pb: 'standing',
+        rs: 'standing',
+        bo: 'standing',
+        muod: 'beggs',
+      },
+    };
+
+    let result = defaults;
+
+    if (savedPvtData) {
+      result = {
+        api: savedPvtData.api || defaults.api,
+        gas_gravity: savedPvtData.gas_gravity || defaults.gas_gravity,
+        temperature: savedPvtData.temperature || defaults.temperature,
+        gor: savedPvtData.gor || defaults.gor,
+        water_gravity: (savedPvtData as any).water_gravity || defaults.water_gravity,
+        pb: typeof savedPvtData.pb === 'number' ? savedPvtData.pb : null,
+        stock_temp: savedPvtData.stock_temp || defaults.stock_temp,
+        stock_pressure: savedPvtData.stock_pressure || defaults.stock_pressure,
+        co2_frac: savedPvtData.co2_frac || defaults.co2_frac,
+        h2s_frac: savedPvtData.h2s_frac || defaults.h2s_frac,
+        n2_frac: savedPvtData.n2_frac || defaults.n2_frac,
+        correlations: (savedPvtData.correlations as any) || defaults.correlations,
+      };
+    }
+
+    // IMPORTANTE: Sincronizar con el store principal al inicializar
+    setStorePvtInputs(result);
+
+    return result;
+  };
+
+  const [formInputs, setFormInputs] =
+    useState<Record<string, any>>(getInitialFormInputs);
   const [bubblePoints, setBubblePoints] = useState<Record<
     string,
     number
@@ -264,30 +331,99 @@ export const NodalAnalysisPvtModule: React.FC = () => {
   const [showPvtDetails, setShowPvtDetails] = useState(false);
   const [localLoading, setLocalLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (iprInputs) {
-      setFormInputs({
-        api: 35,
-        gas_gravity: 0.7,
-        temperature: 180,
-        gor: computedGOR,
-        water_gravity: 1.05,
+    if (iprInputs?.pb !== undefined) {
+      setFormInputs(prev => ({
+        ...prev,
         pb: iprInputs.pb ?? null,
-        stock_temp: 60,
-        stock_pressure: 14.7,
-        co2_frac: 0,
-        h2s_frac: 0,
-        n2_frac: 0,
-        correlations: {
+      }));
+    }
+  }, [iprInputs?.pb]);
+
+  useEffect(() => {
+    setIsSaving(true);
+    const timeoutId = setTimeout(() => {
+      const pvtData = {
+        api: formInputs.api || 35,
+        gas_gravity: formInputs.gas_gravity || 0.7,
+        gor: formInputs.gor || 500,
+        stock_temp: formInputs.stock_temp || 60,
+        stock_pressure: formInputs.stock_pressure || 14.7,
+        temperature: formInputs.temperature || 180,
+        pb: formInputs.pb || 0,
+        co2_frac: formInputs.co2_frac || 0,
+        h2s_frac: formInputs.h2s_frac || 0,
+        n2_frac: formInputs.n2_frac || 0,
+        correlations: formInputs.correlations || {
           pb: 'standing',
           rs: 'standing',
           bo: 'standing',
           muod: 'beggs',
         },
-      });
-    }
-  }, [iprInputs, computedGOR]);
+        ift: 20, // Valor por defecto para interfacial tension
+        water_gravity: formInputs.water_gravity || 1.05,
+      };
+
+      const mockIprData = {
+        BOPD: 1000,
+        BWPD: 200,
+        MCFD: 500,
+        Pr: 3000,
+        PIP: 1500,
+        steps: 10,
+      };
+
+      const mockHydraulicsData = {
+        oil_rate: 1000,
+        water_rate: 200,
+        gas_rate: 500,
+        reservoir_pressure: 3000,
+        bubble_point: formInputs.pb || 2500,
+        pump_intake_pressure: 1500,
+        oil_gravity: formInputs.api || 35,
+        gas_gravity: formInputs.gas_gravity || 0.7,
+        water_gravity: 1.05,
+        temperature: formInputs.temperature || 180,
+        tubing_id: 2.875,
+        tubing_depth: 8000,
+        casing_id: 7.0,
+        inclination: 0,
+        wellhead_pressure: 100,
+        temperature_gradient: 1.5,
+        roughness: 0.0006,
+      };
+
+      quickSave(
+        mockIprData,
+        pvtData,
+        mockHydraulicsData,
+        selectedBubblePointMethod
+      );
+      setIsSaving(false);
+    }, 500);
+
+    return () => {
+      clearTimeout(timeoutId);
+      setIsSaving(false);
+    };
+  }, [formInputs, selectedBubblePointMethod, quickSave]);
+
+  const handleFieldChange = (name: string, value: number) => {
+    setFormInputs(prev => {
+      const updated = {
+        ...prev,
+        [name]: value,
+      };
+      
+      // IMPORTANTE: También actualizar el store principal para mantener sincronización
+      const { setPvtInputs } = useAnalysisStore.getState();
+      setPvtInputs(updated);
+      
+      return updated;
+    });
+  };
 
   const handleCalculate = async (inputs: any) => {
     setLocalError(null);
@@ -303,9 +439,12 @@ export const NodalAnalysisPvtModule: React.FC = () => {
           muod: 'beggs',
         },
       };
+      
+      // IMPORTANTE: Actualizar el store principal con los datos de cálculo
+      setStorePvtInputs(enhanced);
+      
       await calculatePVT(enhanced);
 
-      // Mock bubble points for demo
       setBubblePoints({
         standing: 2450,
         vazquez: 2425,
@@ -345,20 +484,27 @@ export const NodalAnalysisPvtModule: React.FC = () => {
             <div className="p-2 bg-system-purple/10 rounded-xl">
               <Beaker className="h-6 w-6 text-system-purple" />
             </div>
-            <div className="space-y-1">
-              <CardTitle className="text-title-1 font-semibold text-foreground">
-                PVT Analysis
-              </CardTitle>
+            <div className="space-y-1 flex-1">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-title-1 font-semibold text-foreground">
+                  PVT Analysis
+                </CardTitle>
+                {isSaving && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="w-2 h-2 bg-system-blue rounded-full animate-pulse"></div>
+                    Guardando...
+                  </div>
+                )}
+              </div>
               <CardDescription className="text-subheadline text-muted-foreground leading-relaxed">
                 Calculate fluid properties and bubble point pressure for
-                accurate nodal analysis.
+                accurate nodal analysis. Los datos se guardan automáticamente.
               </CardDescription>
             </div>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-8">
-          {/* Loading State */}
           {isLoading ? (
             <div
               className={cn(
@@ -379,16 +525,14 @@ export const NodalAnalysisPvtModule: React.FC = () => {
               </div>
             </div>
           ) : (
-            formInputs && (
-              <PVTForm
-                initialInputs={formInputs}
-                onSubmit={handleCalculate}
-                initialPb={pvtResults?.results?.[0]?.pb}
-              />
-            )
+            <PVTForm
+              initialInputs={formInputs}
+              onSubmit={handleCalculate}
+              onFieldChange={handleFieldChange}
+              initialPb={pvtResults?.results?.[0]?.pb}
+            />
           )}
 
-          {/* Error Alert */}
           {errorMsg && (
             <Alert
               className={cn(
@@ -405,7 +549,6 @@ export const NodalAnalysisPvtModule: React.FC = () => {
             </Alert>
           )}
 
-          {/* Results Section */}
           {pvtResults && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
@@ -422,13 +565,11 @@ export const NodalAnalysisPvtModule: React.FC = () => {
                 </Button>
               </div>
 
-              {/* Bubble Point Display */}
               <BubblePointDisplay
                 value={displayBP}
                 method={selectedBubblePointMethod}
               />
 
-              {/* Detailed Results */}
               {showDetails && (
                 <div className="space-y-4 animate-in fade-in-0 slide-in-from-top-2 duration-300">
                   <Separator />
@@ -466,7 +607,6 @@ export const NodalAnalysisPvtModule: React.FC = () => {
                 </div>
               )}
 
-              {/* Success Alert */}
               <Alert
                 className={cn(
                   'border-system-green/50 bg-system-green/8 shadow-md shadow-system-green/10',
