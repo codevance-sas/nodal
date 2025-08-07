@@ -25,6 +25,7 @@ RUN npm ci
 # Build the application
 FROM deps AS builder
 COPY . .
+RUN rm -rf .next*
 RUN npm run build
 
 # Production image
