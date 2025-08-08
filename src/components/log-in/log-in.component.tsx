@@ -245,9 +245,9 @@ export const LogInComponent = () => {
 
       <div className="w-7/12 bg-[#1B262C] flex items-center justify-center animated fadeInRight">
         <img
-          src="/img/BigNodalLogo.png"
+          src="/img/NodalLogoStacked.svg"
           alt="Nodal Logo"
-          className="w-[300px]"
+          className="w-[500px]"
         />
       </div>
     </div>
