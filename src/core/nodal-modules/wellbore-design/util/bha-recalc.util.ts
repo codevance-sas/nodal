@@ -73,52 +73,41 @@ export const recalcTopBtmBha = ({
       desc: draft.desc !== undefined ? draft.desc : row.desc,
     };
 
-    // Calculate bottom based on whether it's explicitly set in draft
-    let bottom: number;
-    let length = mergedRow.length;
-
     // Check if this is a tubing type row
     const isTubing = isTubingType(mergedRow.type);
 
+    // Get the validated length
+    let length = validateNumericValue(mergedRow.length, 0);
+
+    // Handle draft.bottom if explicitly set
+    if (draft.bottom !== undefined) {
+      const bottom = validateNumericValue(draft.bottom, top);
+      // Recalculate length based on the explicit bottom value
+      length = bottom - top;
+    }
+
+    // Calculate bottom as top + length (new logic)
+    const bottom = top + length;
+
+    // Calculate count based on type
+    let count: number = 1;
+
     if (isTubing) {
-      // For tubing types, always use average tubing joints for length calculation
+      // For tubing types, calculate count from length and average joints
       const validatedAverageJoints = validateNumericValue(
         averageTubingJoints,
         30
       ); // Default 30ft if invalid
-      const validatedCount = validateNumericValue(mergedRow.count, 1);
 
-      length = validatedAverageJoints;
-
-      // If bottom is explicitly set in draft, respect it but recalculate length
-      if (draft.bottom !== undefined) {
-        bottom = validateNumericValue(draft.bottom, top);
-        // Recalculate length based on the explicit bottom value
-        if (validatedCount > 0) {
-          length = (bottom - top) / validatedCount;
-        }
+      if (validatedAverageJoints > 0) {
+        count = Math.ceil(length / validatedAverageJoints);
       } else {
-        // Auto-calculate bottom for tubing using average joints
-        bottom = top + length * validatedCount;
+        count = 1; // Fallback to 1 if average joints is 0
       }
     } else {
-      // Non-tubing types follow original logic
-      if (draft.bottom !== undefined) {
-        // If bottom is explicitly set, use it and recalculate length if needed
-        bottom = validateNumericValue(draft.bottom, top);
-        if (mergedRow.count > 0) {
-          length = (bottom - top) / mergedRow.count;
-        }
-      } else {
-        // Calculate bottom from count and length
-        const validatedLength = validateNumericValue(length, 0);
-        const validatedCount = validateNumericValue(mergedRow.count, 1);
-        bottom = top + validatedCount * validatedLength;
-        length = validatedLength;
-      }
+      // For non-tubing types, use the existing count
+      count = validateNumericValue(mergedRow.count, 1);
     }
-
-    lastBottom = bottom;
 
     // Ensure all calculated values are valid
     const finalTop = validateNumericValue(top, initialTop);
@@ -133,6 +122,7 @@ export const recalcTopBtmBha = ({
       top: finalTop,
       bottom: validatedBottom,
       length: finalLength,
+      count,
     };
   });
 };
@@ -175,26 +165,37 @@ export const recalcTopBtmCasing = ({
           : row.top
         : lastBottom;
 
-    // Calculate bottom
-    let bottom: number;
     let length = mergedRow.length;
 
+    // Handle draft.bottom if explicitly set
     if (draft.bottom !== undefined) {
-      bottom = draft.bottom;
-      if (mergedRow.count > 0) {
-        length = (bottom - top) / mergedRow.count;
-      }
-    } else {
-      bottom = top + mergedRow.count * length;
+      const bottom = validateNumericValue(draft.bottom, top);
+      // Recalculate length based on the explicit bottom value
+      length = bottom - top;
     }
+
+    // Calculate bottom as top + length (new logic)
+    const bottom = top + length;
+
+    // Count is just metadata for casing (no tubing types here)
+    const count = validateNumericValue(mergedRow.count, 1);
 
     lastBottom = bottom;
 
+    // Ensure all calculated values are valid
+    const finalTop = validateNumericValue(top, initialTop);
+    const finalBottom = validateNumericValue(bottom, finalTop);
+    const finalLength = validateNumericValue(length, 0);
+
+    // Additional validation: bottom should always be >= top
+    const validatedBottom = finalBottom < finalTop ? finalTop : finalBottom;
+
     return {
       ...mergedRow,
-      top,
-      bottom,
-      length,
+      top: finalTop,
+      bottom: validatedBottom,
+      length: finalLength,
+      count,
     };
   });
 };

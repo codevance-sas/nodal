@@ -62,17 +62,18 @@ export const NodalAnalysisContainer: React.FC = () => {
   const [showBHADesign, setShowBHADesign] = useState<boolean>(false);
   const [isTableOpen, setTableOpen] = useState(false);
 
-  const isWellboreDesignRequired =
-    bhaRows.length === 0 && casingRows.length === 0;
-
   const handleTabChange = useCallback((newValue: string) => {
     setActiveTab(newValue as BhaCasingBuilderTab);
   }, []);
 
   const mergedRows = useMemo(() => {
-    if (isWellboreDesignRequired) return [];
     return mergeBhaAndCasingRows(bhaRows, casingRows, nodalDepth);
-  }, [bhaRows, casingRows, nodalDepth, isWellboreDesignRequired]);
+  }, [bhaRows, casingRows, nodalDepth]);
+
+  const isWellboreDesignRequired = useMemo<boolean>(
+    () => mergedRows.length === 0,
+    [mergedRows]
+  );
 
   return (
     <>
