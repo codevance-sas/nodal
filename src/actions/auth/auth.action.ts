@@ -90,8 +90,7 @@ function handleServiceError<T>(
   actionName: string
 ): ActionResult<T> {
   const error: ActionError = {
-    message:
-      serviceResult.error.error.detail[0]?.msg || 'Service error occurred',
+    message: serviceResult.message ?? 'Service error occurred',
     code: 'service_error',
     details: {
       status: serviceResult.error.status,
@@ -388,6 +387,8 @@ export async function validateTokenAction(
 
     const serviceResult = await validateToken(input);
 
+    console.log('[validateTokenAction] serviceResult', serviceResult);
+
     if (serviceResult.success) {
       logger.info(actionName, `${actionName} completed successfully`, {
         dataKeys: Object.keys(serviceResult.data),
@@ -481,7 +482,8 @@ function validateCreateDomainInput(
   }
 
   // Basic domain format validation
-  const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+  const domainRegex =
+    /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
   if (!domainRegex.test(input.domain)) {
     logger.warn(context, 'Invalid domain format', { domain: input.domain });
     return false;
@@ -557,7 +559,10 @@ export async function addAllowedDomainAction(
   }
 }
 
-function validateRemoveDomainInput(domain: any, context: string): domain is string {
+function validateRemoveDomainInput(
+  domain: any,
+  context: string
+): domain is string {
   if (!domain || typeof domain !== 'string') {
     logger.warn(context, 'Invalid domain parameter', { domain: typeof domain });
     return false;
@@ -569,7 +574,8 @@ function validateRemoveDomainInput(domain: any, context: string): domain is stri
   }
 
   // Basic domain format validation
-  const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+  const domainRegex =
+    /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
   if (!domainRegex.test(domain)) {
     logger.warn(context, 'Invalid domain format', { domain });
     return false;

@@ -17,6 +17,7 @@ import { SidebarNav } from "./sidebar-nav";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSidebarStore } from "@/lib/stores/sidebar-store";
 import { cn } from "@/lib/utils";
+import { InspirationalQuote } from "@/components/common/inspirational-quote.component";
 
 export function DashboardSidebar() {
   const { isOpen, isMobileOpen, setMobileSidebarOpen } = useSidebarStore();
@@ -48,6 +49,7 @@ export function DashboardSidebar() {
             </SidebarContent>
 
             <SidebarFooter className="border-t border-sidebar-border/30 p-4">
+              <InspirationalQuote />
               <Button
                 variant="plain"
                 size="default"
@@ -77,6 +79,7 @@ export function DashboardSidebar() {
         </SidebarContent>
 
         <SidebarFooter className="border-t border-sidebar-border/30 p-4">
+          <InspirationalQuote />
           <Button
             variant="plain"
             size="default"

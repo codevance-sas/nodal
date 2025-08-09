@@ -98,4 +98,5 @@ export type ServiceResponse<T> =
   | {
       success: false;
       error: APIErrorResponse;
+      message?: string;
     };

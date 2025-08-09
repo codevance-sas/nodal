@@ -53,7 +53,9 @@ export const LogInComponent = () => {
         setCurrentStep(1);
       } else {
         toast.error('Error requesting token', {
-          description: result.error.message,
+          description: `${
+            (result.error as any).details?.errorDetail ?? ''
+          } contact the system administrator for assistance {email here}.`,
         });
       }
     } catch (error) {
@@ -79,7 +81,7 @@ export const LogInComponent = () => {
         router.push('/dashboard/nodal-modules/wellbore-design');
       } else {
         toast.error('Error validating token', {
-          description: result.error.message,
+          description: `${result.error.message}. Please try again with a different token or contact the system administrator for assistance.`,
         });
       }
     } catch (error) {

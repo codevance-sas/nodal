@@ -2,7 +2,7 @@ export function selectBubblePoint(
   curveData: Record<string, number> | undefined,
   recommended: string | undefined,
   result: any,
-  computedGOR: number
+  gor: number
 ): number {
   if (curveData) {
     const method = recommended ?? 'standing';
@@ -18,7 +18,9 @@ export function selectBubblePoint(
     return result.results[0].pb;
   }
 
-  const estimate = Math.min(computedGOR * 0.5, 5000);
+  const estimate = Math.min(gor * 0.5, 5000);
   console.warn('No valid bubble point found, using estimate:', estimate);
   return estimate;
 }
+
+

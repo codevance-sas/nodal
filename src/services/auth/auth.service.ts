@@ -444,15 +444,30 @@ export async function validateToken(
           dataKeys: data ? Object.keys(data) : [],
         });
 
-        return {
-          success: true,
-          data: data as ValidateTokenResponse,
-        };
+        if (data.success) {
+          return {
+            success: true,
+
+            data: data as ValidateTokenResponse,
+          };
+        } else {
+          return {
+            success: false,
+            error: {
+              error: data,
+              status: response.status,
+              endpoint: 'auth/validate-token',
+              timestamp: new Date().toISOString(),
+            },
+            message: data.message,
+          };
+        }
       }
 
       let errorData;
       try {
         errorData = await response.json();
+        console.log('[validateToken] errorData', errorData);
       } catch {
         errorData = {
           detail: [
@@ -878,7 +893,11 @@ export async function generateToken(
         stack: error.stack,
       });
 
-      const apiError = handleAPIError(error, 'auth/admin/generate-token', attempt);
+      const apiError = handleAPIError(
+        error,
+        'auth/admin/generate-token',
+        attempt
+      );
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
@@ -1279,7 +1298,9 @@ export async function removeAllowedDomain(
 ): Promise<ServiceResponse<any>> {
   'use server';
 
-  const url = `${REQUEST_CONFIG.BASE_URL}/auth/allowed-domains/${encodeURIComponent(domain)}`;
+  const url = `${
+    REQUEST_CONFIG.BASE_URL
+  }/auth/allowed-domains/${encodeURIComponent(domain)}`;
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
 
@@ -1423,13 +1444,17 @@ export async function removeAllowedDomain(
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
-        logger.warn('removeAllowedDomain', `Retrying after error in ${delay}ms`, {
-          endpoint: 'auth/allowed-domains',
-          attempt,
-          nextAttempt: attempt + 1,
-          delay,
-          errorType: error.name,
-        });
+        logger.warn(
+          'removeAllowedDomain',
+          `Retrying after error in ${delay}ms`,
+          {
+            endpoint: 'auth/allowed-domains',
+            attempt,
+            nextAttempt: attempt + 1,
+            delay,
+            errorType: error.name,
+          }
+        );
         await RequestUtils.delay(delay);
         continue;
       }
