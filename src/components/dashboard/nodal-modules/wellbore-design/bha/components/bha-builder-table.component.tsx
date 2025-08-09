@@ -935,10 +935,8 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
             enableRowOrdering
             enableTopToolbar={false}
             enableColumnActions={false}
-            enablePagination={true}
-            enableBottomToolbar={true}
-            positionPagination="bottom"
-            initialState={{ density: 'xs', pagination: { pageSize: 10, pageIndex: 0 } }}
+            enablePagination={false}
+            enableBottomToolbar={false}
             mantineRowDragHandleProps={({ table }) => ({
               onDragEnd: () => {
                 const { draggingRow, hoveredRow } = table.getState();
