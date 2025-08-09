@@ -534,6 +534,14 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
     });
 
     const filtered = rows.filter(r => !selected.has(r.id));
+    
+    // Clear drafts for removed rows
+    setDrafts(prev => {
+      const next = new Map(prev);
+      selected.forEach(id => next.delete(id));
+      return next;
+    });
+    
     const recalc = recalcTopBtm({
       rows: filtered,
       initialTop,
@@ -970,8 +978,11 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
             enableRowOrdering
             enableTopToolbar={false}
             enableColumnActions={false}
-            enablePagination={false}
-            enableBottomToolbar={false}
+            enablePagination={true}
+            enableBottomToolbar={true}
+            initialState={{
+              pagination: { pageSize: 10, pageIndex: 0 },
+            }}
             mantineRowDragHandleProps={({ table }) => ({
               onDragEnd: () => {
                 const { draggingRow, hoveredRow } = table.getState();
@@ -1007,6 +1018,10 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
               highlightOnHover: true,
               withColumnBorders: true,
               striped: false,
+              style: { maxHeight: '600px' },
+            }}
+            mantineTableContainerProps={{
+              style: { maxHeight: '600px', overflowY: 'auto' },
             }}
           />
         </MantineProvider>
