@@ -117,6 +117,9 @@ export const recalcTopBtmBha = ({
     // Additional validation: bottom should always be >= top
     const validatedBottom = finalBottom < finalTop ? finalTop : finalBottom;
 
+    // Update lastBottom for the next iteration
+    lastBottom = validatedBottom;
+
     return {
       ...mergedRow,
       top: finalTop,

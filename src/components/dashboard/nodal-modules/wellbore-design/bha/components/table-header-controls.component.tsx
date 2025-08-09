@@ -1,5 +1,5 @@
 import { FC, useState, useEffect } from 'react';
-import { Plus, Trash2, Calculator } from 'lucide-react';
+import { Plus, Trash2, Calculator, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { NumberInput } from '@mantine/core';
@@ -15,6 +15,7 @@ interface TableHeaderControlsProps {
   onAddRow: () => void;
   onAverageTubingJointsChange: (value: number) => void;
   onRemoveSelected: () => void;
+  onCopyToClipboard: () => void;
   selectedCount: number;
 }
 
@@ -26,6 +27,7 @@ export const TableHeaderControls: FC<TableHeaderControlsProps> = ({
   averageTubingJoints,
   onAddRow,
   onRemoveSelected,
+  onCopyToClipboard,
   onAverageTubingJointsChange,
 }) => {
   const [localValue, setLocalValue] = useState<number>(averageTubingJoints);
@@ -116,6 +118,17 @@ export const TableHeaderControls: FC<TableHeaderControlsProps> = ({
             role="group"
             aria-label="Table actions"
           >
+            <Button
+              onClick={onCopyToClipboard}
+              size="sm"
+              variant="outline"
+              className="transition-all duration-200 hover:scale-105"
+              aria-label="Copy table data to clipboard as CSV"
+            >
+              <Copy className="h-4 w-4 mr-1" aria-hidden="true" />
+              Copy CSV
+            </Button>
+
             <Button
               onClick={onAddRow}
               size="sm"

@@ -575,6 +575,49 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
   ]);
 
   /**
+   * Copies table data to clipboard in CSV format
+   */
+  const copyToClipboard = useCallback(async () => {
+    try {
+      // Define CSV headers
+      const headers = ['Type', 'Top [ft]', 'Count', 'Length [ft]', 'OD [in]', 'ID [in]', 'Bottom [ft]', 'Description'];
+      
+      // Convert rows to CSV format
+      const csvRows = rows.map(row => [
+        row.type || '',
+        row.top.toFixed(2),
+        row.count.toString(),
+        row.length.toFixed(2),
+        row.od.toFixed(2),
+        row.idVal.toFixed(2),
+        row.bottom.toFixed(2),
+        row.desc || ''
+      ]);
+      
+      // Combine headers and data
+      const csvContent = [headers, ...csvRows]
+        .map(row => row.map(cell => `"${cell}"`).join(','))
+        .join('\n');
+      
+      // Copy to clipboard
+      await navigator.clipboard.writeText(csvContent);
+      
+      // Show success toast
+      toast({
+        title: 'Success',
+        description: `${nameTable} table data copied to clipboard as CSV`,
+      });
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to copy table data to clipboard',
+        variant: 'destructive',
+      });
+    }
+  }, [rows, nameTable]);
+
+  /**
    * Handles select all / deselect all functionality
    */
   const handleSelectAll = useCallback(() => {
@@ -975,6 +1018,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
         averageTubingJoints={averageTubingJoints}
         onAddRow={addLocalRow}
         onRemoveSelected={removeSelected}
+        onCopyToClipboard={copyToClipboard}
         onAverageTubingJointsChange={setAverageTubingJoints}
       />
 
@@ -1040,10 +1084,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
             mantineTableContainerProps={{
               style: { maxHeight: '600px', overflowY: 'auto' },
             }}
-            mantinePaginationProps={{
-              showRowsPerPage: true,
-              rowsPerPageOptions: ['5', '10', '20', '50'],
-            }}
+            mantinePaginationProps={{}}
           />
         </MantineProvider>
         </div>
