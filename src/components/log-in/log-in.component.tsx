@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Checkbox } from '@/components/ui/checkbox';
-import { User } from 'lucide-react';
+import { User, Copy } from 'lucide-react';
 
 interface Step {
   title: string;
@@ -37,6 +37,15 @@ export const LogInComponent = () => {
   const [hasToken, setHasToken] = useState(false);
   const router = useRouter();
 
+  const copyAdminEmailToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText('mlozano@nodalenergygroup.com');
+      toast.success('Admin email copied to clipboard');
+    } catch (error) {
+      toast.error('Failed to copy admin email');
+    }
+  };
+
   const handleRequestToken = async (
     event: React.FormEvent<HTMLFormElement>
   ) => {
@@ -55,12 +64,20 @@ export const LogInComponent = () => {
         toast.error('Error requesting token', {
           description: `${
             (result.error as any).details?.errorDetail ?? ''
-          } contact the system administrator for assistance mlozano@nodalenergygroup.com.`,
+          } contact the system administrator for assistance.`,
+          action: {
+            label: 'Copy Admin Email',
+            onClick: copyAdminEmailToClipboard,
+          },
         });
       }
     } catch (error) {
       toast.error('Error', {
         description: 'An unexpected error occurred',
+        action: {
+           label: 'Copy Admin Email',
+           onClick: copyAdminEmailToClipboard,
+         },
       });
     } finally {
       setIsLoading(false);
@@ -82,11 +99,19 @@ export const LogInComponent = () => {
       } else {
         toast.error('Error validating token', {
           description: `${result.error.message}. Please try again with a different token or contact the system administrator for assistance.`,
+          action: {
+            label: 'Copy Admin Email',
+            onClick: copyAdminEmailToClipboard,
+          },
         });
       }
     } catch (error) {
       toast.error('Error', {
         description: 'An unexpected error occurred',
+        action: {
+           label: 'Copy Admin Email',
+           onClick: copyAdminEmailToClipboard,
+         },
       });
     } finally {
       setIsLoading(false);
