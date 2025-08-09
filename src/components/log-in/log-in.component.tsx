@@ -270,12 +270,15 @@ export const LogInComponent = () => {
         </div>
       </div>
 
-      <div className="w-7/12 bg-[#1B262C] flex items-center justify-center animated fadeInRight">
+      <div className="w-7/12 bg-[#1B262C] flex flex-col items-center justify-center animated fadeInRight">
         <img
           src="/img/NodalLogoStacked.svg"
           alt="Nodal Logo"
-          className="w-[500px]"
+          className="w-[500px] mb-8"
         />
+        <p className="text-white text-xl font-light text-center italic max-w-md">
+          Every well has a story - engineer one worth telling.
+        </p>
       </div>
     </div>
   );
