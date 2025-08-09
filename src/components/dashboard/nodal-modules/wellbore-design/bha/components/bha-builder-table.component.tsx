@@ -73,9 +73,14 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
   isAverageTubingJointsVisible,
 }) => {
   const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [drafts, setDrafts] = useState<Map<string, Partial<BhaRowData>>>(
     new Map()
   );
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [validationState, setValidationState] = useState<ValidationState>({
@@ -86,6 +91,12 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
 
   // Track which fields are being actively edited
   const [activeFields, setActiveFields] = useState<Set<string>>(new Set());
+
+  // Pagination state
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
   // Automatically recalculate rows when averageTubingJoints changes
   useEffect(() => {
@@ -968,9 +979,10 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
       />
 
       <div className="backdrop-blur-sm rounded-xl overflow-hidden shadow-xl transition-colors duration-200 bg-card border border-border">
-        <MantineProvider
-          theme={{ colorScheme: theme === 'dark' ? 'dark' : 'light' }}
-        >
+        <div suppressHydrationWarning>
+          <MantineProvider
+            theme={{ colorScheme: mounted && theme === 'dark' ? 'dark' : 'light' }}
+          >
           <MantineReactTable
             autoResetPageIndex={false}
             columns={columns}
@@ -980,9 +992,14 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
             enableColumnActions={false}
             enablePagination={true}
             enableBottomToolbar={true}
+            paginationDisplayMode="pages"
             initialState={{
               pagination: { pageSize: 10, pageIndex: 0 },
             }}
+            state={{
+              pagination,
+            }}
+            onPaginationChange={setPagination}
             mantineRowDragHandleProps={({ table }) => ({
               onDragEnd: () => {
                 const { draggingRow, hoveredRow } = table.getState();
@@ -1023,8 +1040,13 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
             mantineTableContainerProps={{
               style: { maxHeight: '600px', overflowY: 'auto' },
             }}
+            mantinePaginationProps={{
+              showRowsPerPage: true,
+              rowsPerPageOptions: ['5', '10', '20', '50'],
+            }}
           />
         </MantineProvider>
+        </div>
       </div>
     </div>
   );

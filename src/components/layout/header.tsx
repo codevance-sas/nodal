@@ -36,29 +36,19 @@ export function Header({
       <div className="flex items-center gap-4">
         <SidebarToggle />
         <div className="hidden items-center gap-2 md:flex">
-          <div
+          <Image
+            src={
+              theme === 'dark'
+                ? '/dashboard/header/img/logo-dark.png'
+                : theme === 'light'
+                ? '/dashboard/header/img/logo-light.png'
+                : '/dashboard/header/img/logo.svg'
+            }
+            alt="logo"
+            width={132}
+            height={40}
             suppressHydrationWarning
-            className={`px-3 py-2 rounded-lg transition-colors duration-200 ${
-              theme === 'dark' || theme === 'light'
-                ? 'bg-transparent'
-                : theme !== 'dark'
-                ? 'bg-gray-900/90 backdrop-blur-sm'
-                : 'bg-transparent'
-            }`}
-          >
-            <Image
-              src={
-                theme === 'dark'
-                  ? '/dashboard/header/img/logo-dark.png'
-                  : theme === 'light'
-                  ? '/dashboard/header/img/logo-light.png'
-                  : '/dashboard/header/img/logo.svg'
-              }
-              alt="logo"
-              width={132}
-              height={40}
-            />
-          </div>
+          />
         </div>
       </div>
 
