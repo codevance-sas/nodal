@@ -55,7 +55,7 @@ export const LogInComponent = () => {
         toast.error('Error requesting token', {
           description: `${
             (result.error as any).details?.errorDetail ?? ''
-          } contact the system administrator for assistance {email here}.`,
+          } contact the system administrator for assistance mlozano@nodalenergygroup.com.`,
         });
       }
     } catch (error) {
