@@ -556,6 +556,33 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
   ]);
 
   /**
+   * Handles select all / deselect all functionality
+   */
+  const handleSelectAll = useCallback(() => {
+    if (selected.size === rows.length) {
+      // If all rows are selected, deselect all
+      setSelected(new Set());
+    } else {
+      // Otherwise, select all rows
+      setSelected(new Set(rows.map(row => row.id)));
+    }
+  }, [selected.size, rows]);
+
+  /**
+   * Determines if all rows are selected
+   */
+  const isAllSelected = useMemo(() => {
+    return rows.length > 0 && selected.size === rows.length;
+  }, [selected.size, rows.length]);
+
+  /**
+   * Determines if some (but not all) rows are selected
+   */
+  const isIndeterminate = useMemo(() => {
+    return selected.size > 0 && selected.size < rows.length;
+  }, [selected.size, rows.length]);
+
+  /**
    * Computes net length of BHA accounting for overlaps
    */
   const calculateNetLength = useMemo(() => {
@@ -667,6 +694,14 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
     {
       id: 'select',
       header: 'Select',
+      Header: () => (
+         <div className="flex items-center justify-center w-full h-full">
+           <Checkbox
+             checked={isIndeterminate ? 'indeterminate' : isAllSelected}
+             onCheckedChange={handleSelectAll}
+           />
+         </div>
+       ),
       Cell: ({ row }: MRT_Cell<BhaRowData>) => {
         console.log('[BhaBuilderTable.select] row', row);
         return (
