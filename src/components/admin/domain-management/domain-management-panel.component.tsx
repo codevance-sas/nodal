@@ -90,7 +90,7 @@ export const DomainManagementPanel = () => {
         setDomains(result.data.domains);
         setTotalDomains(result.data.total);
       } else {
-        toast.error('Error loading domains', {
+        toast.error('Error loading domains/emails', {
           description: result.error.message,
         });
       }
@@ -109,14 +109,14 @@ export const DomainManagementPanel = () => {
       const result = await addAllowedDomainAction(formData);
 
       if (result.success) {
-        toast.success('Domain added successfully', {
-          description: `Domain ${result.data.domain} has been added`,
+        toast.success('Domain/Email added successfully', {
+          description: `${result.data.domain} has been added`,
         });
         setIsAddDialogOpen(false);
         setFormData({ domain: '', description: '' });
         loadDomains();
       } else {
-        toast.error('Error adding domain', {
+        toast.error('Error adding domain/email', {
           description: result.error.message,
         });
       }
@@ -132,12 +132,12 @@ export const DomainManagementPanel = () => {
       const result = await removeAllowedDomainAction(domain);
 
       if (result.success) {
-        toast.success('Domain removed successfully', {
-          description: `Domain ${domain} has been removed`,
+        toast.success('Domain/Email removed successfully', {
+          description: `${domain} has been removed`,
         });
         loadDomains();
       } else {
-        toast.error('Error removing domain', {
+        toast.error('Error removing domain/email', {
           description: result.error.message,
         });
       }
@@ -150,10 +150,11 @@ export const DomainManagementPanel = () => {
     return new Date(dateString).toLocaleString();
   };
 
-  const validateDomain = (domain: string) => {
+  const validateDomainOrEmail = (input: string) => {
     const domainRegex =
       /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-    return domainRegex.test(domain);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return domainRegex.test(input) || emailRegex.test(input);
   };
 
   const totalPages = Math.ceil(totalDomains / ITEMS_PER_PAGE);
@@ -163,29 +164,29 @@ export const DomainManagementPanel = () => {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            Domain Management
+            Domain And Email Management
           </h2>
           <p className="text-muted-foreground">
-            Manage allowed domains for user registration
+            Manage allowed domains and emails for user registration
           </p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Add New Domain
+              Add New Domain/Email
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New Domain</DialogTitle>
+              <DialogTitle>Add New Domain or Email</DialogTitle>
               <DialogDescription>
-                Add a new domain to the allowed list for user registration.
+                Add a new domain or email to the allowed list for user registration.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleAddDomain} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="domain">Domain</Label>
+                <Label htmlFor="domain">Domain or Email</Label>
                 <Input
                   id="domain"
                   type="text"
@@ -193,12 +194,12 @@ export const DomainManagementPanel = () => {
                   onChange={e =>
                     setFormData(prev => ({ ...prev, domain: e.target.value }))
                   }
-                  placeholder="example.com"
+                  placeholder="example.com or user@example.com"
                   required
                 />
-                {formData.domain && !validateDomain(formData.domain) && (
+                {formData.domain && !validateDomainOrEmail(formData.domain) && (
                   <p className="text-sm text-destructive">
-                    Please enter a valid domain format
+                    Please enter a valid domain or email format
                   </p>
                 )}
               </div>
@@ -230,11 +231,11 @@ export const DomainManagementPanel = () => {
                   type="submit"
                   disabled={
                     isAdding ||
-                    !validateDomain(formData.domain) ||
+                    !validateDomainOrEmail(formData.domain) ||
                     !formData.description.trim()
                   }
                 >
-                  {isAdding ? 'Adding...' : 'Add Domain'}
+                  {isAdding ? 'Adding...' : 'Add Domain/Email'}
                 </Button>
               </DialogFooter>
             </form>
@@ -249,7 +250,7 @@ export const DomainManagementPanel = () => {
               <TableHead>
                 <div className="flex items-center gap-2">
                   <Globe className="h-4 w-4" />
-                  Domain
+                  Domain/Email
                 </div>
               </TableHead>
               <TableHead>Description</TableHead>
@@ -266,13 +267,13 @@ export const DomainManagementPanel = () => {
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center">
-                  Loading domains...
+                  Loading domains/emails...
                 </TableCell>
               </TableRow>
             ) : domains.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center">
-                  No domains found
+                  No domains/emails found
                 </TableCell>
               </TableRow>
             ) : (
@@ -306,7 +307,7 @@ export const DomainManagementPanel = () => {
                           className="hover:bg-destructive"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
-                          Remove Domain
+                          Remove Domain/Email
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -320,7 +321,7 @@ export const DomainManagementPanel = () => {
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Showing {domains.length} of {totalDomains} domains
+          Showing {domains.length} of {totalDomains} domains/emails
         </p>
         <div className="flex items-center space-x-2">
           <Button
@@ -355,8 +356,8 @@ export const DomainManagementPanel = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove the domain "{selectedDomain}" from the allowed
-              list. Users with this domain will no longer be able to register.
+              This will remove "{selectedDomain}" from the allowed
+              list. Users with this domain/email will no longer be able to register.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -369,7 +370,7 @@ export const DomainManagementPanel = () => {
                 setIsConfirmDialogOpen(false);
               }}
             >
-              Remove Domain
+              Remove Domain/Email
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
