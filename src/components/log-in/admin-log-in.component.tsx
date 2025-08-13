@@ -30,24 +30,22 @@ export const AdminLogInComponent = () => {
       const email = formData.get('email') as string;
       const password = formData.get('password') as string;
 
-      const result = await loginAction({
+      const result = (await loginAction({
         email,
         password,
-      });
+      })) as any;
 
-      if (result?.success) {
-        toast.success('Inicio de sesión exitoso');
+      console.log('[result]', result);
+
+      if (result?.data?.success) {
+        toast.success('Successful login.');
         router.push('/dashboard/nodal-modules/wellbore-design');
         return;
       }
 
       if (result) {
-        const errorResult = result as Extract<
-          ActionResult<LoginResponse>,
-          { success: false }
-        >;
-        toast.error('Error de inicio de sesión', {
-          description: errorResult.error.message,
+        toast.error('Login error', {
+          description: result?.data?.message ?? 'Invalid email or password',
         });
       }
     } catch (error) {

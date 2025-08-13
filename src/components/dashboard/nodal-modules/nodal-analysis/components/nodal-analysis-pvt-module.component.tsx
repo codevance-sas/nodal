@@ -33,6 +33,7 @@ import {
   Droplets,
 } from 'lucide-react';
 import { InputField } from '@/components/custom/input-field/input-field.component';
+import { CompactPVTResults } from '@/components/dashboard/nodal-modules/common/compact-pvt-results.component';
 
 const PVTForm: React.FC<{
   initialInputs: any;
@@ -204,59 +205,6 @@ const CollapsiblePanel: React.FC<{
   );
 };
 
-const CompactPVTResults: React.FC<{
-  data: any;
-  showDetails: boolean;
-  onToggleDetails: () => void;
-}> = ({ data, showDetails, onToggleDetails }) => (
-  <div className="space-y-4">
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div className="space-y-1">
-        <p className="text-xs text-muted-foreground">Oil Density</p>
-        <p className="font-medium">
-          {data?.results?.[0]?.oil_density?.toFixed(3) || 'N/A'} g/cc
-        </p>
-      </div>
-      <div className="space-y-1">
-        <p className="text-xs text-muted-foreground">Gas Density</p>
-        <p className="font-medium">
-          {data?.results?.[0]?.gas_density?.toFixed(4) || 'N/A'} g/cc
-        </p>
-      </div>
-      <div className="space-y-1">
-        <p className="text-xs text-muted-foreground">Oil Viscosity</p>
-        <p className="font-medium">
-          {data?.results?.[0]?.oil_viscosity?.toFixed(2) || 'N/A'} cp
-        </p>
-      </div>
-      <div className="space-y-1">
-        <p className="text-xs text-muted-foreground">Gas Viscosity</p>
-        <p className="font-medium">
-          {data?.results?.[0]?.gas_viscosity?.toFixed(4) || 'N/A'} cp
-        </p>
-      </div>
-    </div>
-
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={onToggleDetails}
-      className="w-full"
-    >
-      <BarChart3 className="h-4 w-4 mr-2" />
-      {showDetails ? 'Hide Details' : 'Show Details'}
-    </Button>
-
-    {showDetails && (
-      <div className="p-4 bg-muted/50 rounded-lg animate-in slide-in-from-top-2 duration-300">
-        <p className="text-sm text-muted-foreground">
-          Detailed PVT results would be displayed here...
-        </p>
-      </div>
-    )}
-  </div>
-);
-
 export const NodalAnalysisPvtModule: React.FC = () => {
   const {
     calculatePVTProperties: calculatePVT,
@@ -302,14 +250,16 @@ export const NodalAnalysisPvtModule: React.FC = () => {
         gas_gravity: savedPvtData.gas_gravity || defaults.gas_gravity,
         temperature: savedPvtData.temperature || defaults.temperature,
         gor: savedPvtData.gor || defaults.gor,
-        water_gravity: (savedPvtData as any).water_gravity || defaults.water_gravity,
+        water_gravity:
+          (savedPvtData as any).water_gravity || defaults.water_gravity,
         pb: typeof savedPvtData.pb === 'number' ? savedPvtData.pb : null,
         stock_temp: savedPvtData.stock_temp || defaults.stock_temp,
         stock_pressure: savedPvtData.stock_pressure || defaults.stock_pressure,
         co2_frac: savedPvtData.co2_frac || defaults.co2_frac,
         h2s_frac: savedPvtData.h2s_frac || defaults.h2s_frac,
         n2_frac: savedPvtData.n2_frac || defaults.n2_frac,
-        correlations: (savedPvtData.correlations as any) || defaults.correlations,
+        correlations:
+          (savedPvtData.correlations as any) || defaults.correlations,
       };
     }
 
@@ -416,11 +366,9 @@ export const NodalAnalysisPvtModule: React.FC = () => {
         ...prev,
         [name]: value,
       };
-      
-      // IMPORTANTE: También actualizar el store principal para mantener sincronización
       const { setPvtInputs } = useAnalysisStore.getState();
       setPvtInputs(updated);
-      
+
       return updated;
     });
   };
@@ -439,10 +387,9 @@ export const NodalAnalysisPvtModule: React.FC = () => {
           muod: 'beggs',
         },
       };
-      
-      // IMPORTANTE: Actualizar el store principal con los datos de cálculo
+
       setStorePvtInputs(enhanced);
-      
+
       await calculatePVT(enhanced);
 
       setBubblePoints({
