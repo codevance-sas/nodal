@@ -101,7 +101,7 @@ export function Header({
                     className="flex items-center"
                   >
                     <Globe className="mr-2 h-4 w-4" />
-                    <span>Domain Management</span>
+                    <span>Domain And Email Management</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
