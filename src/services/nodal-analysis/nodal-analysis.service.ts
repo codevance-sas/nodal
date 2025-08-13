@@ -103,8 +103,7 @@ function prepareInput(input: PVTCalculationInput): PVTCalculationInput {
   return {
     ...input,
     stock_temp: input.stock_temp ?? DEFAULT_VALUES.stock_temp,
-    stock_pressure:
-      input.stock_pressure ?? DEFAULT_VALUES.stock_pressure,
+    stock_pressure: input.stock_pressure ?? DEFAULT_VALUES.stock_pressure,
     step_size: input.step_size ?? DEFAULT_VALUES.step_size,
   };
 }
@@ -151,7 +150,7 @@ async function makeRequest<T>(
 ): Promise<ServiceResponse<T>> {
   const url = `${REQUEST_CONFIG.BASE_URL}/pvt/${endpoint}`;
   const preparedInput = prepareInput(input);
-  
+
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
 
@@ -163,11 +162,15 @@ async function makeRequest<T>(
 
   for (let attempt = 1; attempt <= REQUEST_CONFIG.MAX_RETRIES; attempt++) {
     try {
-      logger.info('makeRequest', `Intento ${attempt}/${REQUEST_CONFIG.MAX_RETRIES}`, {
-        endpoint,
-        attempt,
-        url,
-      });
+      logger.info(
+        'makeRequest',
+        `Intento ${attempt}/${REQUEST_CONFIG.MAX_RETRIES}`,
+        {
+          endpoint,
+          attempt,
+          url,
+        }
+      );
 
       const response = await RequestUtils.fetchWithTimeout(
         url,
@@ -320,16 +323,13 @@ function prepareHydraulicsInput(
     fluid_properties: {
       ...input.fluid_properties,
       water_gravity:
-        input.fluid_properties.water_gravity ??
-        DEFAULT_VALUES.water_gravity,
+        input.fluid_properties.water_gravity ?? DEFAULT_VALUES.water_gravity,
     },
     wellbore_geometry: {
       ...input.wellbore_geometry,
-      roughness:
-        input.wellbore_geometry.roughness ?? DEFAULT_VALUES.roughness,
+      roughness: input.wellbore_geometry.roughness ?? DEFAULT_VALUES.roughness,
       depth_steps:
-        input.wellbore_geometry.depth_steps ??
-        DEFAULT_VALUES.depth_steps,
+        input.wellbore_geometry.depth_steps ?? DEFAULT_VALUES.depth_steps,
     },
   };
 }
@@ -433,7 +433,7 @@ async function makeHydraulicsRequest<T>(
 ): Promise<ServiceResponse<T>> {
   const url = `${REQUEST_CONFIG.BASE_URL}/hydraulics/calculate`;
   const preparedInput = prepareHydraulicsInput(input);
-  
+
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
 
@@ -609,7 +609,7 @@ async function makeHydraulicsRecommendRequest<T>(
 ): Promise<ServiceResponse<T>> {
   const url = `${REQUEST_CONFIG.BASE_URL}/hydraulics/recommend`;
   const preparedInput = prepareHydraulicsInput(input);
-  
+
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
 
@@ -847,7 +847,7 @@ async function makeIPRRequest<T>(
 ): Promise<ServiceResponse<T>> {
   const url = `${REQUEST_CONFIG.BASE_URL}/ipr/calculate`;
   const preparedInput = prepareIPRInput(input);
-  
+
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
 
@@ -1062,7 +1062,7 @@ export async function calculatePVTCurve(
 
   try {
     //validateInput(input);
-    return await makeRequest<PVTCurveResponse>('curve', input);
+    return await makeRequest<PVTCurveResponse>('curves', input);
   } catch (error: any) {
     logger.error(
       'calculatePVTCurve',
@@ -1086,7 +1086,7 @@ export async function calculatePVTCurve(
           ],
         },
         status: 400,
-        endpoint: 'pvt/curve',
+        endpoint: 'pvt/curves',
         timestamp: new Date().toISOString(),
       },
     };

@@ -19,7 +19,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAnalysisStore } from '@/store/nodal-modules/nodal-analysis/use-nodal-analysis.store';
-import { useFormHydraulicsPersistenceStore } from '@/store/nodal-modules/nodal-analysis/use-form-hydraulics-persistence.store';
 import { NodalAnalysisPlot } from './nodal-analysis-plot.component';
 import { NodalAnalysisSummary } from './nodal-analysis-summary.component';
 import {
@@ -53,15 +52,10 @@ export const NodalAnalysisChartsModule: React.FC<
     errors,
   } = useAnalysisStore();
 
-  const { currentFormSet, quickSave } = useFormHydraulicsPersistenceStore();
-
   const handleRecalculateVLP = async () => {
     setIsRecalculating(true);
 
     try {
-      console.log('🔄 Starting VLP recalculation...');
-
-      // Usar los datos directamente del store principal, no de persistencia
       const {
         setIprInputs,
         setPvtInputs,
@@ -74,7 +68,6 @@ export const NodalAnalysisChartsModule: React.FC<
         calculateHydraulicsCurve,
       } = useAnalysisStore.getState();
 
-      // Recalcular usando los datos actuales del store
       if (iprInputs) {
         setIprInputs(iprInputs);
       }
@@ -96,8 +89,6 @@ export const NodalAnalysisChartsModule: React.FC<
         await calculateIPRCurve(hydraulicsInputs.bubble_point);
         await calculateHydraulicsCurve(hydraulicsInputs, segments);
       }
-
-      console.log('✅ VLP recalculation completed successfully');
     } catch (error) {
       console.error('Error recalculating VLP:', error);
     } finally {
@@ -181,7 +172,6 @@ export const NodalAnalysisChartsModule: React.FC<
               </div>
             </div>
 
-            {/* Recalculate VLP Button */}
             <Button
               onClick={handleRecalculateVLP}
               disabled={!canRecalculate || isRecalculating}
@@ -210,7 +200,8 @@ export const NodalAnalysisChartsModule: React.FC<
         </CardHeader>
 
         <CardContent className="space-y-8">
-          {operatingPoint && iprCurve.length > 0 && vlpCurve.length > 0 ? (
+          {/* Mostrar gráfica si hay datos de IPR y VLP, incluso sin operating point */}
+          {iprCurve.length > 0 && vlpCurve.length > 0 ? (
             <>
               {/* Main Plot */}
               <div className="space-y-6">
@@ -222,63 +213,45 @@ export const NodalAnalysisChartsModule: React.FC<
               </div>
 
               {/* Summary Section */}
-              <div className="space-y-6">
-                <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="summary" className="border rounded-lg">
-                    <AccordionTrigger className="px-4 py-3 hover:no-underline">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
-                          <BarChart3 className="h-4 w-4 text-primary" />
+              {operatingPoint && (
+                <div className="space-y-6">
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem
+                      value="summary"
+                      className="border rounded-lg"
+                    >
+                      <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+                            <BarChart3 className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="text-left">
+                            <h3 className="font-semibold text-base">
+                              Analysis Summary
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              Review key results and operating parameters
+                            </p>
+                          </div>
                         </div>
-                        <div className="text-left">
-                          <h3 className="font-semibold text-base">
-                            Analysis Summary
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            Review key results and operating parameters
-                          </p>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 pb-4">
+                        <div className="space-y-6 pt-2">
+                          <NodalAnalysisSummary
+                            iprInputs={iprInputs}
+                            pvtInputs={pvtInputs}
+                            hydraulicsResults={hydraulicsResult}
+                            operatingPoint={operatingPoint}
+                          />
                         </div>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-4 pb-4">
-                      <div className="space-y-6 pt-2">
-                        <NodalAnalysisSummary
-                          iprInputs={iprInputs}
-                          pvtInputs={pvtInputs}
-                          hydraulicsResults={hydraulicsResult}
-                          operatingPoint={operatingPoint}
-                        />
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </div>
+              )}
             </>
           ) : (
             <div className="space-y-4">
-              {/* Warning Alert */}
-              <Alert
-                className={cn(
-                  'border-system-orange/50 bg-system-orange/8 shadow-md shadow-system-orange/10',
-                  'animate-in slide-in-from-left-2 duration-300',
-                  'dark:border-system-orange/30 dark:bg-system-orange/5 dark:shadow-lg'
-                )}
-              >
-                <Info className="h-4 w-4 text-system-orange" />
-                <AlertDescription className="text-system-orange/90 font-medium space-y-2">
-                  <div className="font-semibold">
-                    Complete all previous sections to generate nodal analysis
-                    results
-                  </div>
-                  {!completeness.hydraulics && (
-                    <div className="text-sm">
-                      Please calculate wellbore hydraulics to view the nodal
-                      analysis charts and operating point.
-                    </div>
-                  )}
-                </AlertDescription>
-              </Alert>
-
               {/* Progress Indicators */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card

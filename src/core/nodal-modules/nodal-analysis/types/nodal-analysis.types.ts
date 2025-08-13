@@ -24,7 +24,7 @@ export interface AnalysisPoint {
 
 export type NodalAnalysisEndpoint =
   | 'calculate'
-  | 'curve'
+  | 'curves'
   | 'hydraulics'
   | 'recommend'
   | 'ipr';

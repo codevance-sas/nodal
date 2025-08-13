@@ -263,14 +263,16 @@ export const NodalAnalysisPvtModule: React.FC = () => {
       };
     }
 
-    // IMPORTANTE: Sincronizar con el store principal al inicializar
-    setStorePvtInputs(result);
-
     return result;
   };
 
   const [formInputs, setFormInputs] =
     useState<Record<string, any>>(getInitialFormInputs);
+
+  // Sincronizar con el store principal después del montaje del componente
+  useEffect(() => {
+    setStorePvtInputs(formInputs);
+  }, []); // Solo ejecutar una vez al montar
   const [bubblePoints, setBubblePoints] = useState<Record<
     string,
     number
@@ -366,8 +368,11 @@ export const NodalAnalysisPvtModule: React.FC = () => {
         ...prev,
         [name]: value,
       };
-      const { setPvtInputs } = useAnalysisStore.getState();
-      setPvtInputs(updated);
+      // Sincronizar con el store después de actualizar el estado local
+      // Esto evita problemas de setState durante render
+      setTimeout(() => {
+        setStorePvtInputs(updated);
+      }, 0);
 
       return updated;
     });
