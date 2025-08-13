@@ -4,18 +4,16 @@ export function selectBubblePoint(
   result: any,
   gor: number
 ): number {
+  const results = result.data.results;
+
   if (curveData) {
     const method = recommended ?? 'standing';
     if (method in curveData) return curveData[method];
     const fallback = curveData['standing'] ?? Object.values(curveData)[0];
     if (fallback != null) return fallback;
   }
-
-  if (result.metadata?.bubble_point != null)
-    return result.metadata.bubble_point;
-
-  if (Array.isArray(result.results) && result.results[0]?.pb != null) {
-    return result.results[0].pb;
+  if (Array.isArray(results) && results[0]?.pb != null) {
+    return results[0].pb;
   }
 
   const estimate = Math.min(gor * 0.5, 5000);
