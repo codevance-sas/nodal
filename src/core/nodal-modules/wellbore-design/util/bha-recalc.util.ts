@@ -54,12 +54,14 @@ export const recalcTopBtmBha = ({
     const draft = drafts.get(row.id) ?? {};
 
     // For the first row, respect its top value or use initialTop
-    const top =
-      index === 0
-        ? draft.top !== undefined
-          ? draft.top
-          : row.top
-        : lastBottom;
+
+    // const top =
+    //   index === 0
+    //     ? draft.top !== undefined
+    //       ? draft.top
+    //       : row.top
+    //     : lastBottom;
+    const top = index === 0 ? 0 : lastBottom;
 
     // Merge all draft values with row
     const mergedRow = {

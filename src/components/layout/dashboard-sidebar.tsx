@@ -80,14 +80,14 @@ export function DashboardSidebar() {
 
         <SidebarFooter className="border-t border-sidebar-border/30 p-4">
           <InspirationalQuote />
-          <Button
+          {/* <Button
             variant="plain"
             size="default"
             className="w-full justify-start gap-3 text-destructive hover:bg-destructive/8"
           >
             <LogOut className="h-4 w-4" />
             <span className="text-callout">Sign Out</span>
-          </Button>
+          </Button> */}
         </SidebarFooter>
       </div>
     </aside>

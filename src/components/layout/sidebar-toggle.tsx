@@ -7,11 +7,12 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 export function SidebarToggle() {
-  const { 
-    isOpen, 
-    isMobileOpen, 
-    toggleSidebar, 
-    toggleMobileSidebar 
+
+  const {
+    isOpen,
+    isMobileOpen,
+    toggleSidebar,
+    toggleMobileSidebar
   } = useSidebarStore();
   const isMobile = useIsMobile();
 
@@ -26,8 +27,9 @@ export function SidebarToggle() {
   const isCurrentlyOpen = isMobile ? isMobileOpen : isOpen;
 
   return (
-    <Button 
-      variant="ghost" 
+
+    <Button
+      variant="ghost"
       size="icon"
       onClick={handleToggle}
       className={cn(
@@ -37,7 +39,9 @@ export function SidebarToggle() {
       aria-label={isCurrentlyOpen ? "Cerrar sidebar" : "Abrir sidebar"}
     >
       {isCurrentlyOpen ? (
-        <X className="h-6 w-6 text-sidebar-foreground" />
+        <>
+          <X className="h-6 w-6 text-sidebar-foreground" />
+        </>
       ) : (
         <Menu className="h-6 w-6 text-sidebar-foreground" />
       )}

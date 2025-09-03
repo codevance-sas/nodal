@@ -54,6 +54,7 @@ interface BhaBuilderTableProps {
   setInitialTop: (top: number) => void;
   setRows: (rows: BhaRowData[]) => void;
   validate: (rows: BhaRowData[]) => string[];
+  onDownload?: () => void;
 }
 
 interface ValidationState {
@@ -71,6 +72,8 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
   setRows,
   validate,
   isAverageTubingJointsVisible,
+  setInitialTop,
+  onDownload
 }) => {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -1020,6 +1023,7 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
         onRemoveSelected={removeSelected}
         onCopyToClipboard={copyToClipboard}
         onAverageTubingJointsChange={setAverageTubingJoints}
+        onDownload={onDownload}
       />
 
       <div className="backdrop-blur-sm rounded-xl overflow-hidden shadow-xl transition-colors duration-200 bg-card border border-border">

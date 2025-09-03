@@ -33,34 +33,49 @@ export const useBhaStore = create<BhaStore>()(
     set => ({
       bhaRows: [],
       setBhaRows: rows => set({ bhaRows: rows }),
+
       casingRows: [],
       setCasingRows: rows => set({ casingRows: rows }),
+
       initialTop: 0,
       setInitialTop: top =>
         set(state => {
           const newTop = top >= 0 ? top : 0;
+
+          const isMinTop = state.bhaRows.every(row => row.top >= newTop);
+          if (isMinTop) {
+            alert(newTop);
+            // Aquí puedes realizar alguna acción adicional si es necesario
+          } else {
+            alert("No lo es")
+          }
+
           return {
             initialTop: newTop,
             nodalDepth: state.nodalDepth < newTop ? newTop : state.nodalDepth,
           };
         }),
+
       addBhaRow: row => set(state => ({ bhaRows: [...state.bhaRows, row] })),
       removeBhaRow: id =>
         set(state => ({
           bhaRows: state.bhaRows.filter(row => row.id !== id),
         })),
+
       addCasingRow: row =>
         set(state => ({ casingRows: [...state.casingRows, row] })),
       removeCasingRow: id =>
         set(state => ({
           casingRows: state.casingRows.filter(row => row.id !== id),
         })),
+
       nodalDepth: 0,
       setNodalDepth: depth =>
         set(state => {
           const validDepth = Math.max(depth, state.initialTop);
           return { nodalDepth: validDepth };
         }),
+
       averageTubingJoints: 0,
       setAverageTubingJoints: joints =>
         set(() => {

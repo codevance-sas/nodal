@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="PROFILE_NIPPLE" data-name="PROFILE NIPPLE" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 516 777">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#Degradado_sin_nombre_81);
+      }
+
+      .cls-2 {
+        fill: url(#Degradado_sin_nombre_1372-2);
+      }
+
+      .cls-3 {
+        fill: #444;
+      }
+
+      .cls-4 {
+        fill: url(#Degradado_sin_nombre_1389-2);
+      }
+
+      .cls-5 {
+        fill: url(#Degradado_sin_nombre_1389);
+      }
+
+      .cls-6 {
+        fill: url(#Degradado_sin_nombre_1372);
+      }
+    </style>
+    <linearGradient id="Degradado_sin_nombre_1389" data-name="Degradado sin nombre 1389" x1="243.96" y1="326.84" x2="264.7" y2="326.84" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3279b1"/>
+      <stop offset=".51" stop-color="#00a2e5"/>
+      <stop offset=".76" stop-color="#178ecc"/>
+      <stop offset=".99" stop-color="#3279b1"/>
+    </linearGradient>
+    <linearGradient id="Degradado_sin_nombre_81" data-name="Degradado sin nombre 81" x1="264.64" y1="342.33" x2="286.48" y2="342.33" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3279b1"/>
+      <stop offset=".51" stop-color="#153e67"/>
+      <stop offset=".69" stop-color="#1e517f"/>
+      <stop offset=".99" stop-color="#3279b1"/>
+    </linearGradient>
+    <linearGradient id="Degradado_sin_nombre_1372" data-name="Degradado sin nombre 1372" x1="264.7" y1="360.74" x2="280.59" y2="360.74" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3279b1"/>
+      <stop offset=".24" stop-color="#94b9d6"/>
+      <stop offset=".51" stop-color="#fff"/>
+      <stop offset=".58" stop-color="#e6eef5"/>
+      <stop offset=".74" stop-color="#a6c5dd"/>
+      <stop offset=".96" stop-color="#4183b6"/>
+      <stop offset=".99" stop-color="#3279b1"/>
+    </linearGradient>
+    <linearGradient id="Degradado_sin_nombre_1389-2" data-name="Degradado sin nombre 1389" x1="243.96" y1="399.16" x2="264.84" y2="399.16" xlink:href="#Degradado_sin_nombre_1389"/>
+    <linearGradient id="Degradado_sin_nombre_1372-2" data-name="Degradado sin nombre 1372" x1="264.64" y1="292.46" x2="281.16" y2="292.46" xlink:href="#Degradado_sin_nombre_1372"/>
+  </defs>
+  <rect class="cls-5" x="243.96" y="258.07" width="20.74" height="137.54"/>
+  <polygon class="cls-1" points="264.64 258.07 264.64 394.56 277.5 394.56 277.5 397.9 277.5 398.65 277.5 426.59 283.61 426.59 283.61 398.65 286.48 394.56 286.48 258.07 264.64 258.07"/>
+  <polygon class="cls-6" points="280.59 334.75 280.59 320.77 279.51 320.77 279.51 294.88 264.7 294.88 264.7 320.77 264.7 333.61 264.7 334.75 264.7 338.18 264.7 341.04 264.7 345.62 264.7 426.59 278.71 426.59 278.71 345.62 280.59 345.62 280.59 338.18 279.51 338.18 279.51 334.75 280.59 334.75"/>
+  <rect class="cls-3" x="264.7" y="258.07" width="16.46" height="31.98"/>
+  <rect class="cls-3" x="247.4" y="401.95" width="17.3" height="24.64"/>
+  <polygon class="cls-4" points="264.84 395.61 243.96 395.61 247.4 397.82 247.4 402.71 264.7 402.71 264.7 398.28 264.84 398.29 264.84 395.61"/>
+  <polygon class="cls-2" points="279.51 294.88 264.64 294.88 264.64 290.04 281.16 290.04 279.51 294.88"/>
+</svg>

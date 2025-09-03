@@ -1,5 +1,5 @@
 import { FC, useState, useEffect } from 'react';
-import { Plus, Trash2, Calculator, Copy } from 'lucide-react';
+import { Plus, Trash2, Calculator, Copy, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { NumberInput } from '@mantine/core';
@@ -17,6 +17,7 @@ interface TableHeaderControlsProps {
   onRemoveSelected: () => void;
   onCopyToClipboard: () => void;
   selectedCount: number;
+  onDownload?: () => void;
 }
 
 export const TableHeaderControls: FC<TableHeaderControlsProps> = ({
@@ -29,6 +30,7 @@ export const TableHeaderControls: FC<TableHeaderControlsProps> = ({
   onRemoveSelected,
   onCopyToClipboard,
   onAverageTubingJointsChange,
+  onDownload
 }) => {
   const [localValue, setLocalValue] = useState<number>(averageTubingJoints);
 
@@ -127,6 +129,17 @@ export const TableHeaderControls: FC<TableHeaderControlsProps> = ({
             >
               <Copy className="h-4 w-4 mr-1" aria-hidden="true" />
               Copy CSV
+            </Button>
+
+            <Button
+              onClick={onDownload}
+              size="sm"
+              variant="outline"
+              className="transition-all duration-200 hover:scale-105"
+              aria-label="Dowloand image of BHA design"
+            >
+              <Download className="h-4 w-4 mr-1" aria-hidden="true" />
+              Dowloand Design
             </Button>
 
             <Button
