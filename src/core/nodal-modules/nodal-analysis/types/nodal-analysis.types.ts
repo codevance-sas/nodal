@@ -74,6 +74,34 @@ export type PVTCurveResponse = any;
 
 // ==================== HYDRAULICS ====================
 
+export interface GasLiftConfig {
+  enabled: boolean;
+  injection_depth: number;
+  injection_volume_scfd: number;
+  injected_gas_gravity: number;
+}
+
+export interface HydraulicsInput {
+  oil_rate: number;
+  water_rate: number;
+  gas_rate: number;
+  reservoir_pressure: number;
+  bubble_point: number;
+  pump_intake_pressure: number;
+  oil_gravity: number;
+  gas_gravity: number;
+  water_gravity: number;
+  temperature: number;
+  tubing_id: number;
+  tubing_depth: number;
+  casing_id: number;
+  inclination: number;
+  wellhead_pressure: number;
+  temperature_gradient: number;
+  roughness: number;
+  gas_lift?: GasLiftConfig;
+}
+
 export interface PipeSegment {
   start_depth: number;
   end_depth: number;

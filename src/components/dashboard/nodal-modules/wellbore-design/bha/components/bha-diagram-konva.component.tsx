@@ -1,6 +1,7 @@
 'use client';
 import { casingTypeOptions } from '@/core/nodal-modules/wellbore-design/constants/bha-type-options.constant';
 import { useBhaStore } from '@/store/nodal-modules/wellbore-design/use-bha.store';
+import { useAnalysisStore } from '@/store/nodal-modules/nodal-analysis/use-nodal-analysis.store';
 import type { BhaRowData } from '@/core/nodal-modules/wellbore-design/types/bha-builder.type';
 import { useTheme } from 'next-themes';
 import {
@@ -11,7 +12,7 @@ import {
   useState,
   type FC,
 } from 'react';
-import { Stage, Layer, Rect, Line, Text, Group, Circle } from 'react-konva';
+import { Stage, Layer, Rect, Line, Text, Group, Circle, Arrow } from 'react-konva';
 
 export interface BhaDiagramKonvaProps {
   showNodalPoint: boolean;
@@ -31,6 +32,8 @@ interface AppleColorsType {
   tubing: string;
   nodalPoint: string;
   nodalPointGlow: string;
+  gasLift: string;
+  gasLiftGlow: string;
   gridLine: string;
   borderLine: string;
   accentLine: string;
@@ -57,6 +60,8 @@ const AppleColorsLight: AppleColorsType = {
 
   nodalPoint: '#DC2626',
   nodalPointGlow: 'rgba(220, 38, 38, 0.2)',
+  gasLift: '#3B82F6',
+  gasLiftGlow: 'rgba(59, 130, 246, 0.2)',
 
   gridLine: '#E5E7EB',
   borderLine: '#D1D5DB',
@@ -86,6 +91,8 @@ const AppleColorsDark: AppleColorsType = {
 
   nodalPoint: '#DC2626',
   nodalPointGlow: 'rgba(220, 38, 38, 0.3)',
+  gasLift: '#60A5FA',
+  gasLiftGlow: 'rgba(96, 165, 250, 0.3)',
 
   gridLine: '#4B5563',
   borderLine: '#6B7280',
@@ -119,6 +126,11 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
   const { theme } = useTheme();
   const { bhaRows, casingRows, initialTop, nodalDepth, setNodalDepth } =
     useBhaStore();
+  const {
+    gasLiftEnabled,
+    injectionDepth,
+    setGasLiftValue,
+  } = useAnalysisStore();
 
   const AppleColors = useMemo(() => {
     return theme === 'dark' ? AppleColorsDark : AppleColorsLight;
@@ -185,6 +197,25 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
   );
 
   const ballY = useMemo(() => calcY(nodalDepth), [calcY, nodalDepth]);
+
+  // Gas lift marker position
+  const gasLiftY = useMemo(() => {
+    const depth = typeof injectionDepth === 'string' ? parseFloat(injectionDepth) : injectionDepth;
+    return calcY(depth);
+  }, [calcY, injectionDepth]);
+
+  // Sync gas lift marker position with store
+  useEffect(() => {
+    // This effect ensures the marker position updates when injectionDepth changes from the input field
+  }, [injectionDepth]);
+
+  // Handle gas lift marker drag
+  const handleGasLiftDragEnd = useCallback((e: any) => {
+    const y = e.target.y();
+    const depth = initialTop + (y - PADDING) / scaleFactor;
+    const validDepth = Math.max(depth, initialTop);
+    setGasLiftValue('injectionDepth', validDepth);
+  }, [initialTop, PADDING, scaleFactor, setGasLiftValue]);
 
   const handleMouseMove = (e: any, row: BhaRowData) => {
     const stage = e.target.getStage();
@@ -470,6 +501,81 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
                 stroke={AppleColors.nodalPoint}
                 strokeWidth={2}
                 dash={[8, 4]}
+                opacity={0.8}
+              />
+            </Layer>
+          )}
+
+          {gasLiftEnabled && (
+            <Layer>
+              {/* Gas lift marker glow */}
+              <Circle
+                x={centerX - 30}
+                y={gasLiftY}
+                radius={12}
+                fill={AppleColors.gasLiftGlow}
+                opacity={0.6}
+              />
+
+              {/* Gas lift arrow */}
+              <Group
+                draggable
+                dragBoundFunc={pos => ({
+                  x: centerX - 30,
+                  y: Math.min(Math.max(pos.y, PADDING), PADDING + innerHeight),
+                })}
+                onDragEnd={handleGasLiftDragEnd}
+                onMouseEnter={e => {
+                  const container = e.target.getStage()?.container();
+                  if (container) {
+                    container.style.cursor = 'grab';
+                  }
+                }}
+                onMouseLeave={e => {
+                  const container = e.target.getStage()?.container();
+                  if (container) {
+                    container.style.cursor = 'default';
+                  }
+                }}
+                onDragStart={e => {
+                  const container = e.target.getStage()?.container();
+                  if (container) {
+                    container.style.cursor = 'grabbing';
+                  }
+                }}
+                x={centerX - 30}
+                y={gasLiftY}
+              >
+                <Arrow
+                  points={[0, 0, 25, 0]}
+                  pointerLength={8}
+                  pointerWidth={6}
+                  fill={AppleColors.gasLift}
+                  stroke={AppleColors.gasLift}
+                  strokeWidth={2}
+                  shadowColor="rgba(0, 0, 0, 0.4)"
+                  shadowBlur={4}
+                  shadowOffset={{ x: 0, y: 2 }}
+                />
+              </Group>
+
+              {/* Gas lift label */}
+              <Text
+                x={centerX + 20}
+                y={gasLiftY - 8}
+                text={`Gas Lift: ${typeof injectionDepth === 'string' ? parseFloat(injectionDepth).toFixed(1) : injectionDepth.toFixed(1)} ft`}
+                fontSize={12}
+                fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+                fill={AppleColors.gasLift}
+                fontStyle="600"
+              />
+
+              {/* Gas lift connection line */}
+              <Line
+                points={[lineLeftX, gasLiftY, centerX - 35, gasLiftY]}
+                stroke={AppleColors.gasLift}
+                strokeWidth={2}
+                dash={[6, 3]}
                 opacity={0.8}
               />
             </Layer>

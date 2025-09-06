@@ -110,6 +110,14 @@ export interface AnalysisState {
 
   roughness: number;
   setRoughness: (roughness: number) => void;
+
+  // Gas Lift properties
+  gasLiftEnabled: boolean;
+  injectionDepth: number;
+  injectionVolume: number;
+  injectedGasGravity: number;
+  setGasLiftEnabled: (enabled: boolean) => void;
+  setGasLiftValue: (key: 'injectionDepth' | 'injectionVolume' | 'injectedGasGravity', value: number) => void;
 }
 
 export const useAnalysisStore = create<AnalysisState>((set, get) => ({
@@ -144,6 +152,14 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
   setInclination: inclination => set({ inclination }),
   roughness: 0.0006,
   setRoughness: roughness => set({ roughness }),
+
+  // Gas Lift initial values
+  gasLiftEnabled: false,
+  injectionDepth: 8000,
+  injectionVolume: 1000000,
+  injectedGasGravity: 0.65,
+  setGasLiftEnabled: enabled => set({ gasLiftEnabled: enabled }),
+  setGasLiftValue: (key, value) => set({ [key]: value }),
   hydraulicsInputs: {
     oil_rate: 300,
     water_rate: 1200,
@@ -313,6 +329,8 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
         roughness: inputs.roughness,
       };
 
+      const { gasLiftEnabled, injectionDepth, injectionVolume, injectedGasGravity } = get();
+
       const merged: any = {
         fluid_properties: {
           oil_rate: fp.oil_rate,
@@ -337,6 +355,16 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
         target_bhp: 0,
         survey_data: surveyData,
       };
+
+      // Add gas lift configuration if enabled
+      if (gasLiftEnabled) {
+        merged.gas_lift = {
+          enabled: true,
+          injection_depth: Number(injectionDepth),
+          injection_volume_scfd: Number(injectionVolume),
+          injected_gas_gravity: Number(injectedGasGravity),
+        };
+      }
 
       const { data: result } = await calculateHydraulicsAction(merged);
       const vlpCurve = generateVlpCurve(result, mergedInputs.oil_rate);

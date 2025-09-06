@@ -20,11 +20,14 @@ import {
   Zap,
   Gauge,
   FlaskConical,
+  Fuel,
 } from 'lucide-react';
 import { CorrelationSelector } from './correlation-selector.component';
 import type { Segments } from '@/core/nodal-modules/nodal-analysis/util/merge-bha-and-casing-rows.util';
 import { SurveyDataUploader } from './survey-data-uploader.component';
 import { InputField } from '@/components/custom/input-field/input-field.component';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
 
 interface HydraulicsModuleProps {
   segments: Segments[];
@@ -52,6 +55,12 @@ export const NodalAnalysisHydraulicsModule: React.FC<HydraulicsModuleProps> = ({
     completeness,
     setInclination,
     setRoughness,
+    gasLiftEnabled,
+    injectionDepth,
+    injectionVolume,
+    injectedGasGravity,
+    setGasLiftEnabled,
+    setGasLiftValue,
   } = useAnalysisStore();
 
   const { clearSurveyData } = useSurveyDataStore();
@@ -457,6 +466,56 @@ export const NodalAnalysisHydraulicsModule: React.FC<HydraulicsModuleProps> = ({
                         disabled={field.readOnly}
                       />
                     ))}
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Gas Lift System */}
+              <div className="space-y-4">
+                <h3 className="text-headline font-semibold text-foreground flex items-center gap-2">
+                  <Fuel className="h-5 w-5 text-system-blue" />
+                  Gas Lift System
+                </h3>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="gas-lift-enabled"
+                    checked={gasLiftEnabled}
+                    onCheckedChange={setGasLiftEnabled}
+                  />
+                  <label
+                    htmlFor="gas-lift-enabled"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Enable Gas Lift
+                  </label>
+                </div>
+
+                {gasLiftEnabled && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                    <InputField
+                      name="injectionDepth"
+                      label="Injection Depth"
+                      unit="ft"
+                      value={Number(injectionDepth)}
+                      onChange={(name, value) => setGasLiftValue('injectionDepth', value)}
+                    />
+                    <InputField
+                      name="injectionVolume"
+                      label="Injection Volume"
+                      unit="scf/d"
+                      value={Number(injectionVolume)}
+                      onChange={(name, value) => setGasLiftValue('injectionVolume', value)}
+                    />
+                    <InputField
+                      name="injectedGasGravity"
+                      label="Injected Gas Gravity"
+                      unit=""
+                      value={Number(injectedGasGravity)}
+                      onChange={(name, value) => setGasLiftValue('injectedGasGravity', value)}
+                    />
                   </div>
                 )}
               </div>
