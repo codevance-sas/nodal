@@ -505,7 +505,7 @@ export const NodalAnalysisHydraulicsModule: React.FC<HydraulicsModuleProps> = ({
                     <InputField
                       name="injectionVolume"
                       label="Injection Volume"
-                      unit="scf/d"
+                      unit="MCFD"
                       value={Number(injectionVolume)}
                       onChange={(name, value) => setGasLiftValue('injectionVolume', value)}
                     />

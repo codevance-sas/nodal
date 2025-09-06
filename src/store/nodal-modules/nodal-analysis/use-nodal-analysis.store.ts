@@ -155,8 +155,8 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
 
   // Gas Lift initial values
   gasLiftEnabled: false,
-  injectionDepth: 8000,
-  injectionVolume: 1000000,
+  injectionDepth: 0,
+  injectionVolume: 500, // MCFD (thousand cubic feet per day)
   injectedGasGravity: 0.65,
   setGasLiftEnabled: enabled => set({ gasLiftEnabled: enabled }),
   setGasLiftValue: (key, value) => set({ [key]: value }),
@@ -361,7 +361,7 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
         merged.gas_lift = {
           enabled: true,
           injection_depth: Number(injectionDepth),
-          injection_volume_scfd: Number(injectionVolume),
+          injection_volume_mcfd: Number(injectionVolume),
           injected_gas_gravity: Number(injectedGasGravity),
         };
       }
