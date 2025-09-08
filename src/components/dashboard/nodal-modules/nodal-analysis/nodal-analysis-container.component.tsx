@@ -7,6 +7,7 @@ import { NodalAnalysisPvtModule } from './components/nodal-analysis-pvt-module.c
 import { NodalAnalysisHydraulicsModule } from './components/nodal-analysis-hydraulics-module.component';
 import { NodalAnalysisChartsModule } from './components/nodal-analysis-charts-module.component';
 import { NodalAnalysisMultiCorrelationModule } from './components/nodal-analysis-multi-correlation-module.component';
+import { NodalAnalysisSensitivityModule } from './components/nodal-analysis-sensitivity-module.component';
 import { useAnalysisStore } from '@/store/nodal-modules/nodal-analysis/use-nodal-analysis.store';
 import { ContextualDescriptionPanel } from '@/components/dashboard/nodal-modules/common/contextual-description-panel.component';
 import { useBhaStore } from '@/store/nodal-modules/wellbore-design/use-bha.store';
@@ -14,10 +15,13 @@ import { WellboreDesignRequiredModal } from './components/wellbore-design-requir
 import { mergeBhaAndCasingRows } from '@/core/nodal-modules/nodal-analysis/util/merge-bha-and-casing-rows.util';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  BhaDiagramKonva,
-  BhaDiagramKonvaProps,
-} from '../wellbore-design/bha/components/bha-diagram-konva.component';
+import dynamic from 'next/dynamic';
+import type { BhaDiagramKonvaProps } from '../wellbore-design/bha/components/bha-diagram-konva.component';
+
+const BhaDiagramKonva = dynamic(
+  () => import('../wellbore-design/bha/components/bha-diagram-konva.component').then(mod => ({ default: mod.BhaDiagramKonva })),
+  { ssr: false }
+);
 import { Button } from '@/components/ui/button';
 import { Settings, Table } from 'lucide-react';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
@@ -34,11 +38,7 @@ import {
   recalcTopBtmCasing,
 } from '@/core/nodal-modules/wellbore-design/util/bha-recalc.util';
 
-const NodalAnalysisSensitivityModule = () => (
-  <div className="p-8 text-center bg-card rounded-xl border border-border/50">
-    <p className="text-muted-foreground">Sensitivity Module - TODO</p>
-  </div>
-);
+
 
 export const NodalAnalysisContainer: React.FC = () => {
   const { activeSection } = useAnalysisStore();
@@ -151,7 +151,7 @@ export const NodalAnalysisContainer: React.FC = () => {
               <NodalAnalysisMultiCorrelationModule segments={mergedRows} />
             )}
             {activeSection === 'sensitivity' && (
-              <NodalAnalysisSensitivityModule />
+              <NodalAnalysisSensitivityModule segments={mergedRows} />
             )}
           </div>
 
@@ -372,3 +372,5 @@ const MemoizedDiagram = memo(
     />
   )
 );
+
+MemoizedDiagram.displayName = 'MemoizedDiagram';

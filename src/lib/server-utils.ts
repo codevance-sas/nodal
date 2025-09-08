@@ -100,7 +100,21 @@ export class GenericErrorHandler {
       status: serviceError.status,
       endpoint: serviceError.endpoint,
       errorDetails: serviceError.error,
+      detailedErrorJson: JSON.stringify(serviceError.error, null, 2),
     });
+
+    // Log detailed validation errors for 422 status
+    if (serviceError.status === 422 && serviceError.error?.detail) {
+      this.logger.error(context, 'Validation errors (422)', {
+        validationErrors: serviceError.error.detail.map((err: any, index: number) => ({
+          index,
+          location: err.loc,
+          message: err.msg,
+          type: err.type,
+          input: err.input
+        }))
+      });
+    }
 
     const firstError = serviceError.error.detail[0];
     const errorType = firstError?.type || 'unknown_error';

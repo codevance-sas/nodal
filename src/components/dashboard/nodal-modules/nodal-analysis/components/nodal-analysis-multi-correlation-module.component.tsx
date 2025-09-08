@@ -35,7 +35,12 @@ import {
   Target,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import Plot from 'react-plotly.js';
+import dynamic from 'next/dynamic';
+
+const Plot = dynamic(() => import('react-plotly.js'), {
+  ssr: false,
+  loading: () => <div className="h-[400px] flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>
+});
 import { useAnalysisStore } from '@/store/nodal-modules/nodal-analysis/use-nodal-analysis.store';
 import { useSurveyDataStore } from '@/store/nodal-modules/use-survey-data.store';
 import type { Segments } from '@/core/nodal-modules/nodal-analysis/util/merge-bha-and-casing-rows.util';

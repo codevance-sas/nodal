@@ -323,13 +323,13 @@ function prepareHydraulicsInput(
     fluid_properties: {
       ...input.fluid_properties,
       water_gravity:
-        input.fluid_properties.water_gravity ?? DEFAULT_VALUES.water_gravity,
+        input.fluid_properties?.water_gravity ?? DEFAULT_VALUES.water_gravity,
     },
     wellbore_geometry: {
       ...input.wellbore_geometry,
-      roughness: input.wellbore_geometry.roughness ?? DEFAULT_VALUES.roughness,
+      roughness: input.wellbore_geometry?.roughness ?? DEFAULT_VALUES.roughness,
       depth_steps:
-        input.wellbore_geometry.depth_steps ?? DEFAULT_VALUES.depth_steps,
+        input.wellbore_geometry?.depth_steps ?? DEFAULT_VALUES.depth_steps,
     },
   };
 }
@@ -444,6 +444,7 @@ async function makeHydraulicsRequest<T>(
       endpoint: 'hydraulics',
       url,
       inputKeys: Object.keys(preparedInput),
+      requestPayload: preparedInput,
     }
   );
 
@@ -524,6 +525,8 @@ async function makeHydraulicsRequest<T>(
         attempt,
         status: response.status,
         error: errorData,
+        detailedError: JSON.stringify(errorData, null, 2),
+        requestPayload: preparedInput,
       });
 
       // No reintentar para errores 4xx (excepto 408, 429)

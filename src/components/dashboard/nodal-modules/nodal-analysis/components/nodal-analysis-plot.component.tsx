@@ -1,7 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import Plot from 'react-plotly.js';
+import dynamic from 'next/dynamic';
+import { Loader2 } from 'lucide-react';
+
+const Plot = dynamic(() => import('react-plotly.js'), {
+  ssr: false,
+  loading: () => <div className="h-[400px] flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>
+});
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';

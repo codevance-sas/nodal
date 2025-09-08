@@ -102,7 +102,7 @@ export interface AnalysisState {
     segments: Segments[],
     onProgress?: (progress: number) => void
   ) => Promise<void>;
-  runSensitivityAnalysis: (param: string, values: number[]) => Promise<any>;
+  runSensitivityAnalysis: (param: string, values: number[], segments: any[]) => Promise<any>;
   recommendBestCorrelation: (inputs: any) => Promise<string>;
 
   inclination: number;
@@ -357,14 +357,14 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
       };
 
       // Add gas lift configuration if enabled
-      if (gasLiftEnabled) {
-        merged.gas_lift = {
-          enabled: true,
-          injection_depth: Number(injectionDepth),
-          injection_volume_mcfd: Number(injectionVolume),
-          injected_gas_gravity: Number(injectedGasGravity),
-        };
-      }
+        if (gasLiftEnabled) {
+          merged.gas_lift = {
+            enabled: true,
+            injection_depth: Number(injectionDepth),
+            injection_volume_mcfd: Number(injectionVolume),
+            injected_gas_gravity: Number(injectedGasGravity),
+          };
+        }
 
       const { data: result } = await calculateHydraulicsAction(merged);
       const vlpCurve = generateVlpCurve(result, mergedInputs.oil_rate);
@@ -470,8 +470,8 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
     }
   },
 
-  runSensitivityAnalysis: async (parameter, values) => {
-    const { fluidProperties: fp, correlationMethod, iprCurve } = get();
+  runSensitivityAnalysis: async (parameter: string, values: number[], segments: any[]) => {
+    const { fluidProperties: fp, correlationMethod, iprCurve, hydraulicsInputs, inclination, roughness, iprInputs } = get();
 
     if (!fp) {
       throw new Error(
@@ -485,26 +485,63 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
     }));
 
     try {
-      const mergedBase: any = {
+      const { surveyData } = useSurveyDataStore.getState();
+      
+      // Use the same structure as calculateHydraulicsCurve for consistency
+      const mergedInputs = {
         oil_rate: fp.oil_rate,
         water_rate: fp.water_rate,
         gas_rate: fp.gas_rate,
-        oil_gravity: fp.oil_gravity,
-        water_gravity: fp.water_gravity,
-        gas_gravity: fp.gas_gravity,
-        bubble_point: fp.bubble_point,
-        temperature_gradient: fp.temperature_gradient,
-        surface_temperature: fp.surface_temperature,
-        depth: 8000,
-        deviation: 90,
-        tubing_id: 2.992,
-        casing_id: 5.5,
-        roughness: 0.0006,
-        depth_steps: 100,
-        method: correlationMethod,
-        surface_pressure: 100,
-        bhp_mode: 'calculate' as const,
+        oil_gravity: fp.oil_gravity ?? hydraulicsInputs.oil_gravity,
+        water_gravity: fp.water_gravity ?? hydraulicsInputs.water_gravity,
+        gas_gravity: fp.gas_gravity ?? hydraulicsInputs.gas_gravity,
+        temperature: fp.surface_temperature ?? hydraulicsInputs.temperature,
+        bubble_point: fp.bubble_point ?? hydraulicsInputs.bubble_point,
+        reservoir_pressure: iprInputs?.Pr ?? hydraulicsInputs.reservoir_pressure,
+        tubing_depth: hydraulicsInputs.tubing_depth,
+        inclination: hydraulicsInputs.inclination,
+        tubing_id: hydraulicsInputs.tubing_id,
+        casing_id: hydraulicsInputs.casing_id,
+        wellhead_pressure: hydraulicsInputs.wellhead_pressure,
+        roughness: hydraulicsInputs.roughness,
       };
+
+      const mergedBase: any = {
+        fluid_properties: {
+          oil_rate: fp.oil_rate,
+          water_rate: fp.water_rate,
+          gas_rate: fp.gas_rate,
+          oil_gravity: fp.oil_gravity,
+          water_gravity: fp.water_gravity,
+          gas_gravity: fp.gas_gravity,
+          bubble_point: fp.bubble_point,
+          temperature_gradient: fp.temperature_gradient,
+          surface_temperature: fp.surface_temperature,
+        },
+        wellbore_geometry: {
+          pipe_segments: segments,
+          deviation: Math.max(mergedInputs.inclination ?? 0, 0),
+          roughness: mergedInputs.roughness ?? 0.0006,
+          depth_steps: 100,
+        },
+        method: correlationMethod,
+        surface_pressure: mergedInputs.wellhead_pressure,
+        bhp_mode: 'calculate',
+        target_bhp: 0,
+        survey_data: surveyData,
+      };
+
+      // Add gas lift configuration to base case if analyzing any gas lift parameter
+      const { gasLiftEnabled, injectionDepth, injectionVolume, injectedGasGravity } = get();
+      const isGasLiftParameter = ['injectionVolume', 'injectionDepth', 'injectedGasGravity'].includes(parameter);
+      if (isGasLiftParameter) {
+        mergedBase.gas_lift = {
+          enabled: true,
+          injection_depth: Number(injectionDepth) || 4000,
+          injection_volume_mcfd: Number(injectionVolume) || 500,
+          injected_gas_gravity: Number(injectedGasGravity) || 0.65,
+        };
+      }
 
       const { data: baseResult } = await calculateHydraulicsAction(mergedBase);
       const vlpCurve = generateVlpCurve(
@@ -541,35 +578,82 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
               modified.reservoir_pressure = value;
               break;
             }
+            case 'injectionVolume': {
+              // Gas lift injection volume - will be handled in gas_lift config below
+              break;
+            }
+            case 'injectionDepth': {
+              // Gas lift injection depth - will be handled in gas_lift config below
+              break;
+            }
+            case 'injectedGasGravity': {
+              // Gas lift injected gas gravity - will be handled in gas_lift config below
+              break;
+            }
             default: {
               (modified as any)[parameter] = value;
             }
           }
 
+          // Create updated mergedInputs for this case
+          const updatedMergedInputs = { ...mergedInputs };
+          
+          // Apply parameter-specific modifications to mergedInputs
+          switch (parameter) {
+            case 'reservoir_pressure':
+              updatedMergedInputs.reservoir_pressure = value;
+              break;
+            case 'tubing_depth':
+              updatedMergedInputs.tubing_depth = value;
+              break;
+            case 'tubing_id':
+              updatedMergedInputs.tubing_id = value;
+              break;
+            case 'wellhead_pressure':
+              updatedMergedInputs.wellhead_pressure = value;
+              break;
+            case 'inclination':
+              updatedMergedInputs.inclination = value;
+              break;
+            case 'roughness':
+              updatedMergedInputs.roughness = value;
+              break;
+          }
+
           const merged: any = {
             fluid_properties: {
-              oil_rate: modified.oil_rate,
-              water_rate: modified.water_rate,
-              gas_rate: modified.gas_rate,
-              oil_gravity: modified.oil_gravity,
-              water_gravity: modified.water_gravity,
-              gas_gravity: modified.gas_gravity,
-              bubble_point: modified.bubble_point,
-              temperature_gradient: modified.temperature_gradient,
-              surface_temperature: modified.surface_temperature,
+              oil_rate: modified.oil_rate || fp.oil_rate,
+              water_rate: modified.water_rate || fp.water_rate,
+              gas_rate: modified.gas_rate || fp.gas_rate,
+              oil_gravity: fp.oil_gravity,
+              water_gravity: fp.water_gravity,
+              gas_gravity: fp.gas_gravity,
+              bubble_point: fp.bubble_point,
+              temperature_gradient: fp.temperature_gradient,
+              surface_temperature: fp.surface_temperature,
             },
             wellbore_geometry: {
-              depth: modified.tubing_depth,
-              deviation: modified.inclination ?? 0,
-              tubing_id: modified.tubing_id,
-              casing_id: modified.casing_id,
-              roughness: modified.roughness ?? 0.0006,
+              pipe_segments: segments,
+              deviation: Math.max(updatedMergedInputs.inclination ?? 0, 0),
+              roughness: updatedMergedInputs.roughness ?? 0.0006,
               depth_steps: 100,
             },
             method: correlationMethod,
-            surface_pressure: modified.wellhead_pressure,
+            surface_pressure: updatedMergedInputs.wellhead_pressure,
             bhp_mode: 'calculate',
+            target_bhp: 0,
+            survey_data: surveyData,
           };
+
+          // Add gas lift configuration if any gas lift parameter is being analyzed
+          if (isGasLiftParameter) {
+            merged.gas_lift = {
+              enabled: true,
+              injection_depth: parameter === 'injectionDepth' ? value : (Number(injectionDepth) || 4000),
+              injection_volume_mcfd: parameter === 'injectionVolume' ? value : (Number(injectionVolume) || 500),
+              injected_gas_gravity: parameter === 'injectedGasGravity' ? value : (Number(injectedGasGravity) || 0.65),
+            };
+          }
 
           const { data: result } = await calculateHydraulicsAction(merged);
           const vlpCurve = generateVlpCurve(
