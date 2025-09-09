@@ -361,8 +361,8 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
           merged.gas_lift = {
             enabled: true,
             injection_depth: Number(injectionDepth),
-            injection_volume_mcfd: Number(injectionVolume),
-            injected_gas_gravity: Number(injectedGasGravity),
+            volume: Number(injectionVolume),
+            gas_gravity: Number(injectedGasGravity),
           };
         }
 
@@ -538,8 +538,8 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
         mergedBase.gas_lift = {
           enabled: true,
           injection_depth: Number(injectionDepth) || 4000,
-          injection_volume_mcfd: Number(injectionVolume) || 500,
-          injected_gas_gravity: Number(injectedGasGravity) || 0.65,
+          volume: Number(injectionVolume) || 500,
+          gas_gravity: Number(injectedGasGravity) || 0.65,
         };
       }
 
@@ -650,8 +650,8 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
             merged.gas_lift = {
               enabled: true,
               injection_depth: parameter === 'injectionDepth' ? value : (Number(injectionDepth) || 4000),
-              injection_volume_mcfd: parameter === 'injectionVolume' ? value : (Number(injectionVolume) || 500),
-              injected_gas_gravity: parameter === 'injectedGasGravity' ? value : (Number(injectedGasGravity) || 0.65),
+              volume: parameter === 'injectionVolume' ? value : (Number(injectionVolume) || 500),
+              gas_gravity: parameter === 'injectedGasGravity' ? value : (Number(injectedGasGravity) || 0.65),
             };
           }
 
