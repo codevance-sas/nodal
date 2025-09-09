@@ -77,8 +77,8 @@ export type PVTCurveResponse = any;
 export interface GasLiftConfig {
   enabled: boolean;
   injection_depth: number;
-  volume: number;
-  gas_gravity: number;
+  injection_volume_mcfd: number;
+  injected_gas_gravity: number;
 }
 
 export interface HydraulicsInput {
