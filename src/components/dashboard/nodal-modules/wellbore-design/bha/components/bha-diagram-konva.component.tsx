@@ -260,6 +260,34 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
     [zones]
   );
 
+  const yToDepth = useCallback(
+    (y: number) => {
+      if (
+        zones.tubing &&
+        y >= zones.tubing.startY &&
+        y <= zones.tubing.startY + zones.tubing.height
+      ) {
+        const relativeY = y - zones.tubing.startY;
+        return zones.tubing.depthRange.min + relativeY / zones.tubing.scale;
+      } else if (
+        zones.bha &&
+        y >= zones.bha.startY &&
+        y <= zones.bha.startY + zones.bha.height
+      ) {
+        const relativeY = y - zones.bha.startY;
+        return zones.bha.depthRange.min + relativeY / zones.bha.scale;
+      } else {
+        // Default to tubing zone calculation if outside bounds
+        if (zones.tubing) {
+          const relativeY = y - zones.tubing.startY;
+          return zones.tubing.depthRange.min + relativeY / zones.tubing.scale;
+        }
+        return initialTop;
+      }
+    },
+    [zones, initialTop]
+  );
+
   const maxDepth = useMemo(() => {
     const depths = [
       initialTop,
@@ -304,29 +332,11 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
   const handleGasLiftDragEnd = useCallback(
     (e: any) => {
       const y = e.target.y();
-
-      let depth = initialTop;
-
-      if (
-        zones.tubing &&
-        y >= zones.tubing.startY &&
-        y <= zones.tubing.startY + zones.tubing.height
-      ) {
-        const relativeY = y - zones.tubing.startY;
-        depth = zones.tubing.depthRange.min + relativeY / zones.tubing.scale;
-      } else if (
-        zones.bha &&
-        y >= zones.bha.startY &&
-        y <= zones.bha.startY + zones.bha.height
-      ) {
-        const relativeY = y - zones.bha.startY;
-        depth = zones.bha.depthRange.min + relativeY / zones.bha.scale;
-      }
-
+      const depth = yToDepth(y);
       const validDepth = Math.max(depth, initialTop);
       setGasLiftValue('injectionDepth', validDepth);
     },
-    [zones, initialTop, setGasLiftValue]
+    [yToDepth, initialTop, setGasLiftValue]
   );
 
   const handleMouseMove = (e: any, row: BhaRowData) => {
@@ -607,13 +617,28 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
                 shadowColor="rgba(0, 0, 0, 0.4)"
                 shadowBlur={6}
                 shadowOffset={{ x: 0, y: 3 }}
-                dragBoundFunc={pos => ({
-                  x: centerX,
-                  y: Math.min(Math.max(pos.y, PADDING), PADDING + innerHeight),
-                })}
+                dragBoundFunc={pos => {
+                  // Calculate the valid Y range based on zones
+                  let minY = PADDING;
+                  let maxY = PADDING + innerHeight;
+
+                  if (zones.tubing) {
+                    minY = zones.tubing.startY;
+                    maxY = zones.tubing.startY + zones.tubing.height;
+                  }
+
+                  if (zones.bha) {
+                    maxY = zones.bha.startY + zones.bha.height;
+                  }
+
+                  return {
+                    x: centerX,
+                    y: Math.min(Math.max(pos.y, minY), maxY),
+                  };
+                }}
                 onDragMove={e => {
                   const y = e.target.y();
-                  const depth = initialTop + (y - PADDING) / scaleFactor;
+                  const depth = yToDepth(y);
                   const validDepth = Math.max(depth, initialTop);
                   setNodalDepth(validDepth);
                   onNodalPointDepth(validDepth);
@@ -641,6 +666,12 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
                   if (container) {
                     container.style.cursor = 'grab';
                   }
+                  // Ensure final position is accurate
+                  const y = e.target.y();
+                  const depth = yToDepth(y);
+                  const validDepth = Math.max(depth, initialTop);
+                  setNodalDepth(validDepth);
+                  onNodalPointDepth(validDepth);
                 }}
               />
 
@@ -677,11 +708,27 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
 
               {/* Gas lift arrow */}
               <Group
+                x={centerX - 30}
+                y={gasLiftY}
                 draggable
-                dragBoundFunc={pos => ({
-                  x: centerX - 30,
-                  y: Math.min(Math.max(pos.y, PADDING), PADDING + innerHeight),
-                })}
+                dragBoundFunc={pos => {
+                  let minY = PADDING;
+                  let maxY = PADDING + innerHeight;
+
+                  if (zones.tubing) {
+                    minY = zones.tubing.startY;
+                    maxY = zones.tubing.startY + zones.tubing.height;
+                  }
+
+                  if (zones.bha) {
+                    maxY = zones.bha.startY + zones.bha.height;
+                  }
+
+                  return {
+                    x: centerX - 30,
+                    y: Math.min(Math.max(pos.y, minY), maxY),
+                  };
+                }}
                 onDragEnd={handleGasLiftDragEnd}
                 onMouseEnter={e => {
                   const container = e.target.getStage()?.container();
@@ -701,8 +748,6 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
                     container.style.cursor = 'grabbing';
                   }
                 }}
-                x={centerX - 30}
-                y={gasLiftY}
               >
                 <Arrow
                   points={[0, 0, 25, 0]}
