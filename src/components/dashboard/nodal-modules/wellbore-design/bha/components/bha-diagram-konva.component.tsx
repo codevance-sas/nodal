@@ -249,6 +249,10 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
       ) {
         const relativeDepth = depth - zones.bha.depthRange.min;
         return zones.bha.startY + relativeDepth * zones.bha.scale;
+      } else if (zones.bha && depth > zones.bha.depthRange.max) {
+        const beyondBhaDepth = depth - zones.bha.depthRange.max;
+        const bhaEndY = zones.bha.startY + zones.bha.height;
+        return bhaEndY + beyondBhaDepth * zones.bha.scale;
       } else {
         if (zones.tubing) {
           const relativeDepth = depth - zones.tubing.depthRange.min;
@@ -276,8 +280,10 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
       ) {
         const relativeY = y - zones.bha.startY;
         return zones.bha.depthRange.min + relativeY / zones.bha.scale;
+      } else if (zones.bha && y > zones.bha.startY + zones.bha.height) {
+        const beyondBhaY = y - (zones.bha.startY + zones.bha.height);
+        return zones.bha.depthRange.max + beyondBhaY / zones.bha.scale;
       } else {
-        // Default to tubing zone calculation if outside bounds
         if (zones.tubing) {
           const relativeY = y - zones.tubing.startY;
           return zones.tubing.depthRange.min + relativeY / zones.tubing.scale;
@@ -289,11 +295,14 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
   );
 
   const maxDepth = useMemo(() => {
-    const depths = [
-      initialTop,
-      ...casingRows.map(r => r.bottom),
-      ...bhaRows.map(r => r.bottom),
-    ];
+    const casingBottoms = casingRows.map(r => r.bottom);
+    const bhaBottoms = bhaRows.map(r => r.bottom);
+
+    const depths = [initialTop, ...casingBottoms, ...bhaBottoms];
+    if (depths.length === 0) {
+      return initialTop;
+    }
+
     return Math.max(...depths);
   }, [initialTop, casingRows, bhaRows]);
 
