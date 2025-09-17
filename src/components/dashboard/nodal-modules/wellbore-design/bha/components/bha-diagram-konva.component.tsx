@@ -12,7 +12,16 @@ import {
   useState,
   type FC,
 } from 'react';
-import { Stage, Layer, Rect, Line, Text, Group, Circle, Arrow } from 'react-konva';
+import {
+  Stage,
+  Layer,
+  Rect,
+  Line,
+  Text,
+  Group,
+  Circle,
+  Arrow,
+} from 'react-konva';
 
 export interface BhaDiagramKonvaProps {
   showNodalPoint: boolean;
@@ -126,11 +135,8 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
   const { theme } = useTheme();
   const { bhaRows, casingRows, initialTop, nodalDepth, setNodalDepth } =
     useBhaStore();
-  const {
-    gasLiftEnabled,
-    injectionDepth,
-    setGasLiftValue,
-  } = useAnalysisStore();
+  const { gasLiftEnabled, injectionDepth, setGasLiftValue } =
+    useAnalysisStore();
 
   const AppleColors = useMemo(() => {
     return theme === 'dark' ? AppleColorsDark : AppleColorsLight;
@@ -162,6 +168,98 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
     [size.height]
   );
 
+  const tubingRows = useMemo(
+    () => bhaRows.filter(row => row.type.toLowerCase().includes('tubing')),
+    [bhaRows]
+  );
+
+  const bhaToolRows = useMemo(
+    () => bhaRows.filter(row => !row.type.toLowerCase().includes('tubing')),
+    [bhaRows]
+  );
+
+  const tubingDepthRange = useMemo(() => {
+    if (tubingRows.length === 0) return { min: initialTop, max: initialTop };
+    const depths = tubingRows.flatMap(row => [row.top, row.bottom]);
+    return { min: Math.min(...depths), max: Math.max(...depths) };
+  }, [tubingRows, initialTop]);
+
+  const bhaDepthRange = useMemo(() => {
+    if (bhaToolRows.length === 0) return { min: initialTop, max: initialTop };
+    const depths = bhaToolRows.flatMap(row => [row.top, row.bottom]);
+    return { min: Math.min(...depths), max: Math.max(...depths) };
+  }, [bhaToolRows, initialTop]);
+
+  const tubingLength = tubingDepthRange.max - tubingDepthRange.min;
+  const bhaLength = bhaDepthRange.max - bhaDepthRange.min;
+
+  const zones = useMemo(() => {
+    const hasOnlyTubing = bhaToolRows.length === 0;
+
+    if (hasOnlyTubing) {
+      return {
+        tubing: {
+          startY: PADDING,
+          height: innerHeight,
+          depthRange: tubingDepthRange,
+          scale: innerHeight / tubingLength,
+        },
+      };
+    } else {
+      const tubingHeight = innerHeight * 0.3;
+      const bhaHeight = innerHeight * 0.7;
+
+      return {
+        tubing: {
+          startY: PADDING,
+          height: tubingHeight,
+          depthRange: tubingDepthRange,
+          scale: tubingHeight / tubingLength,
+        },
+        bha: {
+          startY: PADDING + tubingHeight,
+          height: bhaHeight,
+          depthRange: bhaDepthRange,
+          scale: bhaHeight / bhaLength,
+        },
+      };
+    }
+  }, [
+    innerHeight,
+    tubingDepthRange,
+    bhaDepthRange,
+    tubingLength,
+    bhaLength,
+    bhaToolRows.length,
+  ]);
+
+  const depthToY = useCallback(
+    (depth: number) => {
+      if (
+        zones.tubing &&
+        depth >= zones.tubing.depthRange.min &&
+        depth <= zones.tubing.depthRange.max
+      ) {
+        const relativeDepth = depth - zones.tubing.depthRange.min;
+        return zones.tubing.startY + relativeDepth * zones.tubing.scale;
+      } else if (
+        zones.bha &&
+        depth >= zones.bha.depthRange.min &&
+        depth <= zones.bha.depthRange.max
+      ) {
+        const relativeDepth = depth - zones.bha.depthRange.min;
+        return zones.bha.startY + relativeDepth * zones.bha.scale;
+      } else {
+        if (zones.tubing) {
+          const relativeDepth = depth - zones.tubing.depthRange.min;
+          return zones.tubing.startY + relativeDepth * zones.tubing.scale;
+        }
+        return PADDING;
+      }
+    },
+    [zones]
+  );
+
   const maxDepth = useMemo(() => {
     const depths = [
       initialTop,
@@ -175,10 +273,7 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
     return innerHeight > 0 ? innerHeight / (maxDepth - initialTop) : 1;
   }, [innerHeight, maxDepth, initialTop]);
 
-  const calcY = useCallback(
-    (depth: number) => PADDING + (depth - initialTop) * scaleFactor,
-    [initialTop, scaleFactor]
-  );
+  const calcY = useCallback((depth: number) => depthToY(depth), [depthToY]);
 
   const maxRectWidth = useMemo(() => {
     const widths = [...casingRows, ...bhaRows].map(r => r.od * exaggeration);
@@ -196,42 +291,77 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
     [casingRows, bhaRows]
   );
 
-  const ballY = useMemo(() => calcY(nodalDepth), [calcY, nodalDepth]);
+  const ballY = useMemo(() => depthToY(nodalDepth), [depthToY, nodalDepth]);
 
-  // Gas lift marker position
   const gasLiftY = useMemo(() => {
-    const depth = typeof injectionDepth === 'string' ? parseFloat(injectionDepth) : injectionDepth;
-    return calcY(depth);
-  }, [calcY, injectionDepth]);
+    const depth =
+      typeof injectionDepth === 'string'
+        ? parseFloat(injectionDepth)
+        : injectionDepth;
+    return depthToY(depth);
+  }, [depthToY, injectionDepth]);
 
-  // Sync gas lift marker position with store
-  useEffect(() => {
-    // This effect ensures the marker position updates when injectionDepth changes from the input field
-  }, [injectionDepth]);
+  const handleGasLiftDragEnd = useCallback(
+    (e: any) => {
+      const y = e.target.y();
 
-  // Handle gas lift marker drag
-  const handleGasLiftDragEnd = useCallback((e: any) => {
-    const y = e.target.y();
-    const depth = initialTop + (y - PADDING) / scaleFactor;
-    const validDepth = Math.max(depth, initialTop);
-    setGasLiftValue('injectionDepth', validDepth);
-  }, [initialTop, PADDING, scaleFactor, setGasLiftValue]);
+      let depth = initialTop;
+
+      if (
+        zones.tubing &&
+        y >= zones.tubing.startY &&
+        y <= zones.tubing.startY + zones.tubing.height
+      ) {
+        const relativeY = y - zones.tubing.startY;
+        depth = zones.tubing.depthRange.min + relativeY / zones.tubing.scale;
+      } else if (
+        zones.bha &&
+        y >= zones.bha.startY &&
+        y <= zones.bha.startY + zones.bha.height
+      ) {
+        const relativeY = y - zones.bha.startY;
+        depth = zones.bha.depthRange.min + relativeY / zones.bha.scale;
+      }
+
+      const validDepth = Math.max(depth, initialTop);
+      setGasLiftValue('injectionDepth', validDepth);
+    },
+    [zones, initialTop, setGasLiftValue]
+  );
 
   const handleMouseMove = (e: any, row: BhaRowData) => {
     const stage = e.target.getStage();
     const pos = stage.getPointerPosition();
     if (!pos) return;
 
-    const depth = parseFloat(
-      (initialTop + (pos.y - PADDING) / scaleFactor).toFixed(2)
-    );
+    let depth = initialTop;
+
+    if (
+      zones.tubing &&
+      pos.y >= zones.tubing.startY &&
+      pos.y <= zones.tubing.startY + zones.tubing.height
+    ) {
+      const relativeY = pos.y - zones.tubing.startY;
+      depth = zones.tubing.depthRange.min + relativeY / zones.tubing.scale;
+    } else if (
+      zones.bha &&
+      pos.y >= zones.bha.startY &&
+      pos.y <= zones.bha.startY + zones.bha.height
+    ) {
+      const relativeY = pos.y - zones.bha.startY;
+      depth = zones.bha.depthRange.min + relativeY / zones.bha.scale;
+    }
 
     const text = row.desc
-      ? `${row.type} (${row.desc}) • Depth: ${depth} ft • OD: ${row.od}" • ID: ${row.idVal}"`
-      : `${row.type} • Depth: ${depth} ft • OD: ${row.od}" • ID: ${row.idVal}"`;
+      ? `${row.type} (${row.desc}) • Depth: ${depth.toFixed(2)} ft • OD: ${
+          row.od
+        }" • ID: ${row.idVal}"`
+      : `${row.type} • Depth: ${depth.toFixed(2)} ft • OD: ${row.od}" • ID: ${
+          row.idVal
+        }"`;
 
     setTooltip({
-      x: Math.min(pos.x + 20, size.width - 200), // Prevent tooltip overflow
+      x: Math.min(pos.x + 20, size.width - 200),
       y: Math.max(pos.y - 10, 20),
       text,
     });
@@ -239,15 +369,41 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
 
   const handleMouseOut = () => setTooltip(t => ({ ...t, text: '' }));
 
+  const renderCasing = (row: BhaRowData) => {
+    const odW = Math.max(row.od * exaggeration, 8);
+    const rectY = depthToY(row.top);
+    const rectH = Math.max(depthToY(row.bottom) - depthToY(row.top), 2);
+
+    return (
+      <Group key={`casing-${row.id}`}>
+        <Rect
+          x={centerX - odW / 2}
+          y={rectY}
+          width={odW}
+          height={rectH}
+          fill={AppleColors.casing}
+          stroke={AppleColors.borderLine}
+          strokeWidth={1}
+          cornerRadius={2}
+          opacity={0.7}
+          shadowColor="rgba(0, 0, 0, 0.2)"
+          shadowBlur={3}
+          shadowOffset={{ x: 0, y: 1 }}
+        />
+      </Group>
+    );
+  };
+
   return (
     <div
       ref={containerRef}
-      className="w-full h-[100%] bg-background rounded-lg border border-border/30 overflow-hidden transition-colors duration-200"
+      className="w-full h-[100%] bg-background rounded-lg border border-border/30 transition-colors duration-200"
       style={{
         fontFamily:
           '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         minHeight: '650px',
         backgroundColor: AppleColors.background,
+        overflow: 'hidden',
       }}
     >
       {size.width > 0 && size.height > 0 && (
@@ -261,6 +417,8 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
           }}
         >
           <Layer>
+            {casingRows.map(row => renderCasing(row))}
+
             {allRows.map((row, index) => {
               const odW = Math.max(row.od * exaggeration, 8);
               const idW = Math.max(row.idVal * exaggeration, 4);
@@ -559,11 +717,14 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
                 />
               </Group>
 
-              {/* Gas lift label */}
               <Text
                 x={centerX + 20}
                 y={gasLiftY - 8}
-                text={`Gas Lift: ${typeof injectionDepth === 'string' ? parseFloat(injectionDepth).toFixed(1) : injectionDepth.toFixed(1)} ft`}
+                text={`Gas Lift: ${
+                  typeof injectionDepth === 'string'
+                    ? parseFloat(injectionDepth).toFixed(1)
+                    : injectionDepth.toFixed(1)
+                } ft`}
                 fontSize={12}
                 fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
                 fill={AppleColors.gasLift}
