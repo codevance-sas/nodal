@@ -21,6 +21,8 @@ import {
   Group,
   Circle,
   Arrow,
+  RegularPolygon,
+  Path,
 } from 'react-konva';
 
 export interface BhaDiagramKonvaProps {
@@ -52,6 +54,15 @@ interface AppleColorsType {
   tooltipBackground: string;
   tooltipText: string;
   tooltipBorder: string;
+}
+
+interface ComponentStyle {
+  fillColor: string;
+  strokeColor: string;
+  pattern?: 'dotted' | 'mesh' | 'gradient';
+  specialShape?: 'hexagon' | 'lhorn' | 'triangular' | 'motor';
+  opacity?: number;
+  strokeWidth?: number;
 }
 
 const AppleColorsLight: AppleColorsType = {
@@ -116,16 +127,210 @@ const AppleColorsDark: AppleColorsType = {
   tooltipBorder: '#4B5563',
 };
 
-const getColorFromType = (type: string, colors: AppleColorsType): string => {
+const getRenderStyle = (
+  type: string,
+  description: string = '',
+  colors: AppleColorsType
+): ComponentStyle => {
+  const lowerType = type.toLowerCase();
+  const lowerDesc = description.toLowerCase();
+
+  // Casing components
   if (casingTypeOptions.includes(type)) {
-    return colors.casing;
-  } else {
-    return colors.bha;
+    return {
+      fillColor: colors.casing,
+      strokeColor: colors.borderLine,
+      opacity: 0.8,
+      strokeWidth: 1,
+    };
   }
+
+  // Gas Lift components
+  if (lowerType.includes('gas lift mandrel')) {
+    return {
+      fillColor: colors.systemBlue,
+      strokeColor: colors.systemBlue,
+      specialShape: 'lhorn',
+      opacity: 0.8,
+      strokeWidth: 2,
+    };
+  }
+
+  if (lowerType.includes('gas lift') || lowerType.includes('gas separator')) {
+    return {
+      fillColor: colors.systemBlue,
+      strokeColor: colors.systemBlue,
+      opacity: 0.7,
+      strokeWidth: 2,
+    };
+  }
+
+  // Anchors and TACs
+  if (
+    lowerType.includes('anchor') ||
+    lowerType.includes('catcher') ||
+    lowerType.includes('tac')
+  ) {
+    return {
+      fillColor: colors.systemRed,
+      strokeColor: colors.systemRed,
+      specialShape: 'triangular',
+      opacity: 0.8,
+      strokeWidth: 2,
+    };
+  }
+
+  // Packers
+  if (lowerType.includes('packer')) {
+    return {
+      fillColor: colors.systemGreen,
+      strokeColor: colors.systemGreen,
+      specialShape: 'hexagon',
+      opacity: 0.8,
+      strokeWidth: 2,
+    };
+  }
+
+  // Nipples (SN, XN, Profile, Pump Seating, etc.)
+  if (
+    lowerType.includes('nipple') ||
+    lowerType.includes(' sn') ||
+    lowerType.includes('xn')
+  ) {
+    return {
+      fillColor: '#2563EB',
+      strokeColor: colors.systemBlue,
+      opacity: 0.9,
+      strokeWidth: 2,
+    };
+  }
+
+  // ESP
+  if (lowerType.includes('esp')) {
+    return {
+      fillColor: colors.systemOrange,
+      strokeColor: '#D97706',
+      specialShape: 'motor',
+      opacity: 0.8,
+      strokeWidth: 2,
+    };
+  }
+
+  // Jet Pump
+  if (lowerType.includes('jet pump')) {
+    return {
+      fillColor: '#7C3AED',
+      strokeColor: '#5B21B6',
+      opacity: 0.8,
+      strokeWidth: 2,
+    };
+  }
+
+  // Perforated components
+  if (lowerType.includes('perforated')) {
+    return {
+      fillColor: colors.bha,
+      strokeColor: colors.borderLine,
+      pattern: 'dotted',
+      opacity: 0.7,
+      strokeWidth: 1,
+    };
+  }
+
+  // Sand Screen
+  if (lowerType.includes('sand screen')) {
+    return {
+      fillColor: '#92400E',
+      strokeColor: '#78350F',
+      pattern: 'mesh',
+      opacity: 0.8,
+      strokeWidth: 1,
+    };
+  }
+
+  // Slotted components
+  if (lowerType.includes('slotted')) {
+    return {
+      fillColor: colors.bha,
+      strokeColor: colors.borderLine,
+      pattern: 'dotted',
+      opacity: 0.7,
+      strokeWidth: 1,
+    };
+  }
+
+  // Tubing
+  if (lowerType.includes('tubing') && !lowerType.includes('hanger')) {
+    return {
+      fillColor: 'rgba(59, 130, 246, 0.3)',
+      strokeColor: colors.systemBlue,
+      pattern: 'gradient',
+      opacity: 0.6,
+      strokeWidth: 1,
+    };
+  }
+
+  // Float components
+  if (lowerType.includes('float')) {
+    return {
+      fillColor: '#059669',
+      strokeColor: '#047857',
+      opacity: 0.8,
+      strokeWidth: 2,
+    };
+  }
+
+  // Centralizer
+  if (lowerType.includes('centralizer')) {
+    return {
+      fillColor: '#DC2626',
+      strokeColor: '#B91C1C',
+      opacity: 0.7,
+      strokeWidth: 1,
+    };
+  }
+
+  // Cross Over
+  if (lowerType.includes('cross over')) {
+    return {
+      fillColor: '#7C2D12',
+      strokeColor: '#92400E',
+      opacity: 0.8,
+      strokeWidth: 2,
+    };
+  }
+
+  // Plugs
+  if (lowerType.includes('plug')) {
+    return {
+      fillColor: '#1F2937',
+      strokeColor: '#111827',
+      opacity: 0.9,
+      strokeWidth: 2,
+    };
+  }
+
+  // Tools
+  if (lowerType.includes('tool')) {
+    return {
+      fillColor: '#6366F1',
+      strokeColor: '#4F46E5',
+      opacity: 0.8,
+      strokeWidth: 2,
+    };
+  }
+
+  // Default BHA component
+  return {
+    fillColor: colors.bha,
+    strokeColor: colors.borderLine,
+    opacity: 0.7,
+    strokeWidth: 1,
+  };
 };
 
 /**
- * BhaDiagramKonva - Interactive BHA diagram component with Apple Design System
+ * BhaDiagramKonva - Interactive BHA diagram component with Apple Design System and Visual Differentiation
  */
 export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
   exaggeration = 10,
@@ -138,9 +343,54 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
   const { gasLiftEnabled, injectionDepth, setGasLiftValue } =
     useAnalysisStore();
 
+  const calculateBhaNetLength = useMemo(() => {
+    if (bhaRows.length === 0) return 0;
+    const intervals = bhaRows
+      .map(row => [row.top, row.bottom] as [number, number])
+      .sort((a, b) => a[0] - b[0]);
+
+    let netLength = 0;
+    let [currentStart, currentEnd] = intervals[0];
+
+    for (let i = 1; i < intervals.length; i++) {
+      const [start, end] = intervals[i];
+      if (start <= currentEnd) {
+        currentEnd = Math.max(currentEnd, end);
+      } else {
+        netLength += currentEnd - currentStart;
+        [currentStart, currentEnd] = [start, end];
+      }
+    }
+    netLength += currentEnd - currentStart;
+    return netLength;
+  }, [bhaRows]);
+
+  const calculateCasingNetLength = useMemo(() => {
+    if (casingRows.length === 0) return 0;
+    const intervals = casingRows
+      .map(row => [row.top, row.bottom] as [number, number])
+      .sort((a, b) => a[0] - b[0]);
+
+    let netLength = 0;
+    let [currentStart, currentEnd] = intervals[0];
+
+    for (let i = 1; i < intervals.length; i++) {
+      const [start, end] = intervals[i];
+      if (start <= currentEnd) {
+        currentEnd = Math.max(currentEnd, end);
+      } else {
+        netLength += currentEnd - currentStart;
+        [currentStart, currentEnd] = [start, end];
+      }
+    }
+    netLength += currentEnd - currentStart;
+    return netLength;
+  }, [casingRows]);
+
   const AppleColors = useMemo(() => {
     return theme === 'dark' ? AppleColorsDark : AppleColorsLight;
   }, [theme]);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<{ width: number; height: number }>({
     width: 0,
@@ -178,6 +428,28 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
     [bhaRows]
   );
 
+  // Calculate overall depth range including both casing and BHA
+  const overallDepthRange = useMemo(() => {
+    const allDepths = [initialTop];
+
+    // Add all BHA depths
+    if (bhaRows.length > 0) {
+      const bhaDepths = bhaRows.flatMap(row => [row.top, row.bottom]);
+      allDepths.push(...bhaDepths);
+    }
+
+    // Add all casing depths
+    if (casingRows.length > 0) {
+      const casingDepths = casingRows.flatMap(row => [row.top, row.bottom]);
+      allDepths.push(...casingDepths);
+    }
+
+    return {
+      min: Math.min(...allDepths),
+      max: Math.max(...allDepths),
+    };
+  }, [bhaRows, casingRows, initialTop]);
+
   const tubingDepthRange = useMemo(() => {
     if (tubingRows.length === 0) return { min: initialTop, max: initialTop };
     const depths = tubingRows.flatMap(row => [row.top, row.bottom]);
@@ -190,125 +462,288 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
     return { min: Math.min(...depths), max: Math.max(...depths) };
   }, [bhaToolRows, initialTop]);
 
-  const tubingLength = tubingDepthRange.max - tubingDepthRange.min;
-  const bhaLength = bhaDepthRange.max - bhaDepthRange.min;
+  const tubingLength = useMemo(
+    () => tubingDepthRange.max - tubingDepthRange.min,
+    [tubingDepthRange]
+  );
+  const bhaLength = useMemo(
+    () => bhaDepthRange.max - bhaDepthRange.min,
+    [bhaDepthRange]
+  );
+
+  // Calculate component groups and their actual depth ranges
+  const componentGroups = useMemo(() => {
+    const groups: Array<{
+      type: 'casing' | 'tubing' | 'bha';
+      rows: any[];
+      depthRange: { min: number; max: number };
+      length: number;
+    }> = [];
+
+    // Casing group
+    if (casingRows.length > 0) {
+      const casingDepths = casingRows.flatMap(row => [row.top, row.bottom]);
+      const casingRange = {
+        min: Math.min(...casingDepths),
+        max: Math.max(...casingDepths),
+      };
+      groups.push({
+        type: 'casing',
+        rows: casingRows,
+        depthRange: casingRange,
+        length: casingRange.max - casingRange.min,
+      });
+    }
+
+    // Tubing group
+    if (tubingRows.length > 0) {
+      const tubingDepths = tubingRows.flatMap(row => [row.top, row.bottom]);
+      const tubingRange = {
+        min: Math.min(...tubingDepths),
+        max: Math.max(...tubingDepths),
+      };
+      groups.push({
+        type: 'tubing',
+        rows: tubingRows,
+        depthRange: tubingRange,
+        length: tubingRange.max - tubingRange.min,
+      });
+    }
+
+    // BHA tools group (non-tubing BHA components)
+    if (bhaToolRows.length > 0) {
+      const bhaDepths = bhaToolRows.flatMap(row => [row.top, row.bottom]);
+      const bhaRange = {
+        min: Math.min(...bhaDepths),
+        max: Math.max(...bhaDepths),
+      };
+      groups.push({
+        type: 'bha',
+        rows: bhaToolRows,
+        depthRange: bhaRange,
+        length: bhaRange.max - bhaRange.min,
+      });
+    }
+
+    return groups;
+  }, [casingRows, tubingRows, bhaToolRows]);
 
   const zones = useMemo(() => {
-    const hasOnlyTubing = bhaToolRows.length === 0;
+    let zonesObj: Record<
+      string,
+      {
+        startY: number;
+        height: number;
+        depthRange: { min: number; max: number };
+        scale: number;
+      }
+    > = {};
 
-    if (hasOnlyTubing) {
-      return {
-        tubing: {
+    // Calculate overall depth range for the diagram
+    const overallLength = Math.max(
+      overallDepthRange.max - overallDepthRange.min,
+      1
+    );
+
+    // Determine zoning strategy based on available components
+    const nonCasingGroups = componentGroups.filter(g => g.type !== 'casing');
+    const casingGroup = componentGroups.find(g => g.type === 'casing');
+    const tubingGroup = componentGroups.find(g => g.type === 'tubing');
+    const bhaGroup = componentGroups.find(g => g.type === 'bha');
+
+    if (componentGroups.length === 0) {
+      // No components - use overall range
+      zonesObj.all = {
+        startY: PADDING,
+        height: innerHeight,
+        depthRange: overallDepthRange,
+        scale: innerHeight / overallLength,
+      };
+    } else if (componentGroups.length === 1) {
+      // Single component type - gets 100% of space
+      const singleGroup = componentGroups[0];
+      zonesObj[singleGroup.type] = {
+        startY: PADDING,
+        height: innerHeight,
+        depthRange: singleGroup.depthRange,
+        scale: innerHeight / Math.max(singleGroup.length, 1),
+      };
+      zonesObj.all = zonesObj[singleGroup.type];
+    } else {
+      // Multiple components - implement dynamic allocation
+
+      // Casing always spans full height with consistent ft/px scaling
+      if (casingGroup) {
+        zonesObj.casing = {
           startY: PADDING,
           height: innerHeight,
-          depthRange: tubingDepthRange,
-          scale: innerHeight / tubingLength,
-        },
-      };
-    } else {
-      const tubingHeight = innerHeight * 0.3;
-      const bhaHeight = innerHeight * 0.7;
-
-      return {
-        tubing: {
+          depthRange: casingGroup.depthRange,
+          scale: innerHeight / Math.max(casingGroup.length, 1),
+        };
+        zonesObj.all = zonesObj.casing; // Fallback to casing zone
+      } else {
+        // No casing - use overall range for fallback
+        zonesObj.all = {
           startY: PADDING,
-          height: tubingHeight,
-          depthRange: tubingDepthRange,
-          scale: tubingHeight / tubingLength,
-        },
-        bha: {
-          startY: PADDING + tubingHeight,
-          height: bhaHeight,
-          depthRange: bhaDepthRange,
-          scale: bhaHeight / bhaLength,
-        },
-      };
+          height: innerHeight,
+          depthRange: overallDepthRange,
+          scale: innerHeight / overallLength,
+        };
+      }
+
+      // Handle BHA components (tubing + other BHA tools)
+      if (nonCasingGroups.length > 0) {
+        if (nonCasingGroups.length === 1) {
+          // Only one BHA component type - gets 100% of BHA space
+          const singleBhaGroup = nonCasingGroups[0];
+          zonesObj[singleBhaGroup.type] = {
+            startY: PADDING,
+            height: innerHeight,
+            depthRange: singleBhaGroup.depthRange,
+            scale: innerHeight / Math.max(singleBhaGroup.length, 1),
+          };
+        } else {
+          // Multiple BHA components - apply 30% tubing rule
+          const totalBhaLength = nonCasingGroups.reduce(
+            (sum, g) => sum + g.length,
+            0
+          );
+
+          if (tubingGroup && bhaGroup) {
+            // Both tubing and BHA tools present
+            const tubingMaxHeight = innerHeight * 0.3;
+            const remainingHeight = innerHeight * 0.7;
+
+            // Tubing gets maximum 30%
+            zonesObj.tubing = {
+              startY: PADDING,
+              height: tubingMaxHeight,
+              depthRange: tubingGroup.depthRange,
+              scale: tubingMaxHeight / Math.max(tubingGroup.length, 1),
+            };
+
+            // BHA tools get remaining 70%
+            zonesObj.bha = {
+              startY: PADDING,
+              height: remainingHeight,
+              depthRange: bhaGroup.depthRange,
+              scale: remainingHeight / Math.max(bhaGroup.length, 1),
+            };
+          } else if (tubingGroup) {
+            // Only tubing present
+            zonesObj.tubing = {
+              startY: PADDING,
+              height: innerHeight,
+              depthRange: tubingGroup.depthRange,
+              scale: innerHeight / Math.max(tubingGroup.length, 1),
+            };
+          } else if (bhaGroup) {
+            // Only BHA tools present
+            zonesObj.bha = {
+              startY: PADDING,
+              height: innerHeight,
+              depthRange: bhaGroup.depthRange,
+              scale: innerHeight / Math.max(bhaGroup.length, 1),
+            };
+          }
+        }
+      }
     }
+
+    return zonesObj;
   }, [
     innerHeight,
-    tubingDepthRange,
-    bhaDepthRange,
-    tubingLength,
-    bhaLength,
-    bhaToolRows.length,
+    overallDepthRange,
+    componentGroups,
   ]);
 
+  // General depth to Y conversion - uses appropriate zone based on context
   const depthToY = useCallback(
     (depth: number) => {
-      if (
-        zones.tubing &&
-        depth >= zones.tubing.depthRange.min &&
-        depth <= zones.tubing.depthRange.max
-      ) {
-        const relativeDepth = depth - zones.tubing.depthRange.min;
-        return zones.tubing.startY + relativeDepth * zones.tubing.scale;
-      } else if (
-        zones.bha &&
-        depth >= zones.bha.depthRange.min &&
-        depth <= zones.bha.depthRange.max
-      ) {
-        const relativeDepth = depth - zones.bha.depthRange.min;
-        return zones.bha.startY + relativeDepth * zones.bha.scale;
-      } else if (zones.bha && depth > zones.bha.depthRange.max) {
-        const beyondBhaDepth = depth - zones.bha.depthRange.max;
-        const bhaEndY = zones.bha.startY + zones.bha.height;
-        return bhaEndY + beyondBhaDepth * zones.bha.scale;
-      } else {
-        if (zones.tubing) {
-          const relativeDepth = depth - zones.tubing.depthRange.min;
-          return zones.tubing.startY + relativeDepth * zones.tubing.scale;
-        }
-        return PADDING;
-      }
+      const zone = zones.all || zones.casing || zones.tubing || zones.bha;
+      if (!zone) return PADDING;
+
+      // Clamp depth to zone's actual range to prevent extending beyond real depths
+      const clampedDepth = Math.max(
+        zone.depthRange.min,
+        Math.min(depth, zone.depthRange.max)
+      );
+
+      const relativeDepth = clampedDepth - zone.depthRange.min;
+      return zone.startY + relativeDepth * zone.scale;
+    },
+    [zones]
+  );
+
+  // Tubing-specific depth to Y conversion
+  const tubingDepthToY = useCallback(
+    (depth: number) => {
+      const zone = zones.tubing || zones.all || zones.casing;
+      if (!zone) return PADDING;
+
+      // Clamp depth to tubing's actual range
+      const clampedDepth = Math.max(
+        zone.depthRange.min,
+        Math.min(depth, zone.depthRange.max)
+      );
+
+      const relativeDepth = clampedDepth - zone.depthRange.min;
+      return zone.startY + relativeDepth * zone.scale;
+    },
+    [zones]
+  );
+
+  // BHA-specific depth to Y conversion
+  const bhaDepthToY = useCallback(
+    (depth: number) => {
+      const zone = zones.bha || zones.all || zones.casing;
+      if (!zone) return PADDING;
+
+      // Clamp depth to BHA's actual range
+      const clampedDepth = Math.max(
+        zone.depthRange.min,
+        Math.min(depth, zone.depthRange.max)
+      );
+
+      const relativeDepth = clampedDepth - zone.depthRange.min;
+      return zone.startY + relativeDepth * zone.scale;
+    },
+    [zones]
+  );
+
+  // Casing-specific depth to Y conversion
+  const casingDepthToY = useCallback(
+    (depth: number) => {
+      const zone = zones.casing || zones.all;
+      if (!zone) return PADDING;
+
+      // Clamp depth to casing's actual range
+      const clampedDepth = Math.max(
+        zone.depthRange.min,
+        Math.min(depth, zone.depthRange.max)
+      );
+
+      const relativeDepth = clampedDepth - zone.depthRange.min;
+      return zone.startY + relativeDepth * zone.scale;
     },
     [zones]
   );
 
   const yToDepth = useCallback(
     (y: number) => {
-      if (
-        zones.tubing &&
-        y >= zones.tubing.startY &&
-        y <= zones.tubing.startY + zones.tubing.height
-      ) {
-        const relativeY = y - zones.tubing.startY;
-        return zones.tubing.depthRange.min + relativeY / zones.tubing.scale;
-      } else if (
-        zones.bha &&
-        y >= zones.bha.startY &&
-        y <= zones.bha.startY + zones.bha.height
-      ) {
-        const relativeY = y - zones.bha.startY;
-        return zones.bha.depthRange.min + relativeY / zones.bha.scale;
-      } else if (zones.bha && y > zones.bha.startY + zones.bha.height) {
-        const beyondBhaY = y - (zones.bha.startY + zones.bha.height);
-        return zones.bha.depthRange.max + beyondBhaY / zones.bha.scale;
-      } else {
-        if (zones.tubing) {
-          const relativeY = y - zones.tubing.startY;
-          return zones.tubing.depthRange.min + relativeY / zones.tubing.scale;
-        }
-        return initialTop;
-      }
+      // Use casing zone for general Y to depth conversion
+      const zone = zones.all || zones.casing || zones.tubing || zones.bha;
+      if (!zone) return initialTop;
+
+      const relativeY = y - zone.startY;
+      return zone.depthRange.min + relativeY / zone.scale;
     },
     [zones, initialTop]
   );
 
   const maxDepth = useMemo(() => {
-    const casingBottoms = casingRows.map(r => r.bottom);
-    const bhaBottoms = bhaRows.map(r => r.bottom);
-
-    const depths = [initialTop, ...casingBottoms, ...bhaBottoms];
-    if (depths.length === 0) {
-      return initialTop;
-    }
-
-    return Math.max(...depths);
-  }, [initialTop, casingRows, bhaRows]);
-
-  const scaleFactor = useMemo(() => {
-    return innerHeight > 0 ? innerHeight / (maxDepth - initialTop) : 1;
-  }, [innerHeight, maxDepth, initialTop]);
+    return overallDepthRange.max;
+  }, [overallDepthRange]);
 
   const calcY = useCallback((depth: number) => depthToY(depth), [depthToY]);
 
@@ -324,8 +759,13 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
   const labelX = lineRightX + 15;
 
   const allRows = useMemo(
-    () => [...casingRows, ...bhaRows].sort((a, b) => a.top - b.top),
-    [casingRows, bhaRows]
+    () => [...bhaRows].sort((a, b) => a.top - b.top),
+    [bhaRows]
+  );
+
+  const sortedCasingRows = useMemo(
+    () => [...casingRows].sort((a, b) => a.top - b.top),
+    [casingRows]
   );
 
   const ballY = useMemo(() => depthToY(nodalDepth), [depthToY, nodalDepth]);
@@ -338,38 +778,12 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
     return depthToY(depth);
   }, [depthToY, injectionDepth]);
 
-  const handleGasLiftDragEnd = useCallback(
-    (e: any) => {
-      const y = e.target.y();
-      const depth = yToDepth(y);
-      const validDepth = Math.max(depth, initialTop);
-      setGasLiftValue('injectionDepth', validDepth);
-    },
-    [yToDepth, initialTop, setGasLiftValue]
-  );
-
   const handleMouseMove = (e: any, row: BhaRowData) => {
     const stage = e.target.getStage();
     const pos = stage.getPointerPosition();
     if (!pos) return;
 
-    let depth = initialTop;
-
-    if (
-      zones.tubing &&
-      pos.y >= zones.tubing.startY &&
-      pos.y <= zones.tubing.startY + zones.tubing.height
-    ) {
-      const relativeY = pos.y - zones.tubing.startY;
-      depth = zones.tubing.depthRange.min + relativeY / zones.tubing.scale;
-    } else if (
-      zones.bha &&
-      pos.y >= zones.bha.startY &&
-      pos.y <= zones.bha.startY + zones.bha.height
-    ) {
-      const relativeY = pos.y - zones.bha.startY;
-      depth = zones.bha.depthRange.min + relativeY / zones.bha.scale;
-    }
+    const depth = yToDepth(pos.y);
 
     const text = row.desc
       ? `${row.type} (${row.desc}) • Depth: ${depth.toFixed(2)} ft • OD: ${
@@ -388,27 +802,313 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
 
   const handleMouseOut = () => setTooltip(t => ({ ...t, text: '' }));
 
-  const renderCasing = (row: BhaRowData) => {
-    const odW = Math.max(row.od * exaggeration, 8);
-    const rectY = depthToY(row.top);
-    const rectH = Math.max(depthToY(row.bottom) - depthToY(row.top), 2);
+  // Special shape rendering functions
+  const renderLHorn = (
+    centerX: number,
+    rectY: number,
+    rectH: number,
+    outerW: number,
+    style: ComponentStyle
+  ) => {
+    const midY = rectY + rectH / 2;
+    const hornSize = 12;
+    return (
+      <Group>
+        {/* L-shaped horn on left side */}
+        <Path
+          data={`M ${centerX - outerW} ${midY - 6} L ${
+            centerX - outerW - hornSize
+          } ${midY - 6} L ${centerX - outerW - hornSize} ${midY + 6} L ${
+            centerX - outerW
+          } ${midY + 6} Z`}
+          fill={style.fillColor}
+          stroke={style.strokeColor}
+          strokeWidth={style.strokeWidth}
+          opacity={style.opacity}
+        />
+      </Group>
+    );
+  };
+
+  const renderTriangularWedges = (
+    centerX: number,
+    rectY: number,
+    rectH: number,
+    innerW: number,
+    outerW: number,
+    style: ComponentStyle
+  ) => {
+    const yCenter = rectY + rectH / 2;
+    const triHeight = 10;
 
     return (
-      <Group key={`casing-${row.id}`}>
+      <Group>
+        {/* Left triangle */}
+        <Path
+          data={`M ${centerX - innerW} ${yCenter - triHeight / 2} L ${
+            centerX - innerW
+          } ${yCenter + triHeight / 2} L ${centerX - outerW} ${yCenter} Z`}
+          fill={style.fillColor}
+          stroke={style.strokeColor}
+          strokeWidth={style.strokeWidth}
+          opacity={style.opacity}
+        />
+        {/* Right triangle */}
+        <Path
+          data={`M ${centerX + innerW} ${yCenter - triHeight / 2} L ${
+            centerX + innerW
+          } ${yCenter + triHeight / 2} L ${centerX + outerW} ${yCenter} Z`}
+          fill={style.fillColor}
+          stroke={style.strokeColor}
+          strokeWidth={style.strokeWidth}
+          opacity={style.opacity}
+        />
+      </Group>
+    );
+  };
+
+  const renderHexagon = (
+    centerX: number,
+    rectY: number,
+    rectH: number,
+    outerW: number,
+    style: ComponentStyle
+  ) => {
+    const centerY = rectY + rectH / 2;
+    return (
+      <RegularPolygon
+        x={centerX}
+        y={centerY}
+        sides={6}
+        radius={outerW * 0.8}
+        fill={style.fillColor}
+        stroke={style.strokeColor}
+        strokeWidth={style.strokeWidth || 2}
+        opacity={style.opacity}
+      />
+    );
+  };
+
+  const renderMotorIcon = (
+    centerX: number,
+    rectY: number,
+    rectH: number,
+    outerW: number,
+    style: ComponentStyle
+  ) => {
+    const centerY = rectY + rectH / 2;
+    const motorSize = Math.min(outerW * 0.6, 8);
+
+    return (
+      <Group>
+        {/* Motor body */}
+        <Circle
+          x={centerX}
+          y={centerY}
+          radius={motorSize}
+          fill={style.fillColor}
+          stroke={style.strokeColor}
+          strokeWidth={style.strokeWidth}
+          opacity={style.opacity}
+        />
+        {/* Motor lines */}
+        <Line
+          points={[
+            centerX - motorSize / 2,
+            centerY,
+            centerX + motorSize / 2,
+            centerY,
+          ]}
+          stroke={style.strokeColor}
+          strokeWidth={1}
+        />
+        <Line
+          points={[
+            centerX,
+            centerY - motorSize / 2,
+            centerX,
+            centerY + motorSize / 2,
+          ]}
+          stroke={style.strokeColor}
+          strokeWidth={1}
+        />
+      </Group>
+    );
+  };
+
+  const renderDottedPattern = (
+    centerX: number,
+    rectY: number,
+    rectH: number,
+    outerW: number,
+    innerW: number
+  ) => {
+    const dots = [];
+    const dotSpacing = 8;
+    const dotsPerRow = Math.floor(outerW / dotSpacing);
+    const rows = Math.floor(rectH / dotSpacing);
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < dotsPerRow; col++) {
+        const x = centerX - outerW / 2 + col * dotSpacing + dotSpacing / 2;
+        const y = rectY + row * dotSpacing + dotSpacing / 2;
+
+        // Skip dots in the inner area
+        if (Math.abs(x - centerX) > innerW / 2) {
+          dots.push(
+            <Circle
+              key={`dot-${row}-${col}`}
+              x={x}
+              y={y}
+              radius={1}
+              fill="#000000"
+              opacity={0.4}
+            />
+          );
+        }
+      }
+    }
+
+    return <Group>{dots}</Group>;
+  };
+
+  const renderMeshPattern = (
+    centerX: number,
+    rectY: number,
+    rectH: number,
+    outerW: number,
+    innerW: number
+  ) => {
+    const lines = [];
+    const lineSpacing = 6;
+    const verticalLines = Math.floor(outerW / lineSpacing);
+    const horizontalLines = Math.floor(rectH / lineSpacing);
+
+    // Vertical lines
+    for (let i = 0; i <= verticalLines; i++) {
+      const x = centerX - outerW / 2 + i * lineSpacing;
+      if (Math.abs(x - centerX) > innerW / 2) {
+        lines.push(
+          <Line
+            key={`v-${i}`}
+            points={[x, rectY, x, rectY + rectH]}
+            stroke="#8B4513"
+            strokeWidth={0.5}
+            opacity={0.6}
+          />
+        );
+      }
+    }
+
+    // Horizontal lines
+    for (let i = 0; i <= horizontalLines; i++) {
+      const y = rectY + i * lineSpacing;
+      lines.push(
+        <Line
+          key={`h-${i}`}
+          points={[centerX - outerW / 2, y, centerX - innerW / 2, y]}
+          stroke="#8B4513"
+          strokeWidth={0.5}
+          opacity={0.6}
+        />
+      );
+      lines.push(
+        <Line
+          key={`h2-${i}`}
+          points={[centerX + innerW / 2, y, centerX + outerW / 2, y]}
+          stroke="#8B4513"
+          strokeWidth={0.5}
+          opacity={0.6}
+        />
+      );
+    }
+
+    return <Group>{lines}</Group>;
+  };
+
+  const renderCasing = (row: BhaRowData, index: number) => {
+    const style = getRenderStyle(row.type, row.desc || '', AppleColors);
+    const odW = Math.max(row.od * exaggeration, 8);
+    const rectY = casingDepthToY(row.top);
+    const rectH = Math.max(
+      casingDepthToY(row.bottom) - casingDepthToY(row.top),
+      2
+    );
+    const isLastCasing = index === sortedCasingRows.length - 1;
+    const showBottom =
+      isLastCasing ||
+      (index < sortedCasingRows.length - 1 &&
+        sortedCasingRows[index + 1].top - row.bottom > 10);
+
+    return (
+      <Group
+        key={`casing-${row.id}`}
+        onMouseMove={e => handleMouseMove(e, row)}
+        onMouseLeave={handleMouseOut}
+      >
         <Rect
           x={centerX - odW / 2}
           y={rectY}
           width={odW}
           height={rectH}
-          fill={AppleColors.casing}
-          stroke={AppleColors.borderLine}
-          strokeWidth={1}
+          fill={style.fillColor}
+          stroke={style.strokeColor}
+          strokeWidth={style.strokeWidth}
           cornerRadius={2}
-          opacity={0.7}
+          opacity={style.opacity}
           shadowColor="rgba(0, 0, 0, 0.2)"
           shadowBlur={3}
           shadowOffset={{ x: 0, y: 1 }}
         />
+        <Line
+          points={[lineLeftX, rectY, lineRightX, rectY]}
+          stroke={AppleColors.gridLine}
+          strokeWidth={1}
+          dash={[6, 4]}
+          opacity={0.7}
+        />
+        <Text
+          x={labelX}
+          y={rectY - 8}
+          text={`${row.top.toFixed(1)} ft`}
+          fontSize={11}
+          fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+          fill={AppleColors.textSecondary}
+          fontStyle="500"
+        />
+        {rectH > 25 && (
+          <Text
+            x={centerX - 30}
+            y={rectY + rectH / 2 - 6}
+            text={row.type}
+            fontSize={10}
+            fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+            fill={AppleColors.textPrimary}
+            fontStyle="600"
+            align="center"
+            width={60}
+          />
+        )}
+        {showBottom && (
+          <>
+            <Line
+              points={[lineLeftX, rectY + rectH, lineRightX, rectY + rectH]}
+              stroke={AppleColors.gridLine}
+              strokeWidth={1}
+              dash={[6, 4]}
+              opacity={0.7}
+            />
+            <Text
+              x={labelX}
+              y={rectY + rectH - 8}
+              text={`${row.bottom.toFixed(1)} ft`}
+              fontSize={11}
+              fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+              fill={AppleColors.textSecondary}
+              fontStyle="500"
+            />
+          </>
+        )}
       </Group>
     );
   };
@@ -436,18 +1136,31 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
           }}
         >
           <Layer>
-            {casingRows.map(row => renderCasing(row))}
+            {/* Render Casing */}
+            {sortedCasingRows.map((row, index) => renderCasing(row, index))}
 
+            {/* Render BHA Components with Enhanced Styling */}
             {allRows.map((row, index) => {
+              const style = getRenderStyle(
+                row.type,
+                row.desc || '',
+                AppleColors
+              );
               const odW = Math.max(row.od * exaggeration, 8);
               const idW = Math.max(row.idVal * exaggeration, 4);
-              const rectY = calcY(row.top);
-              const rectH = Math.max(calcY(row.bottom) - calcY(row.top), 2);
+
+              // Use appropriate depth conversion based on component type
+              const isTubing = row.type.toLowerCase().includes('tubing');
+              const depthConverter = isTubing ? tubingDepthToY : bhaDepthToY;
+              const rectY = depthConverter(row.top);
+              const rectH = Math.max(
+                depthConverter(row.bottom) - depthConverter(row.top),
+                2
+              );
 
               const outerW = Math.max((odW - idW) / 2, 2);
               const innerX = centerX - idW / 2;
 
-              const componentColor = getColorFromType(row.type, AppleColors);
               const isLastComponent = index === allRows.length - 1;
 
               return (
@@ -457,46 +1170,84 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
                   onMouseLeave={handleMouseOut}
                   opacity={0.9}
                 >
-                  <Rect
-                    x={centerX - odW / 2}
-                    y={rectY}
-                    width={outerW}
-                    height={rectH}
-                    fill={componentColor}
-                    stroke={AppleColors.borderLine}
-                    strokeWidth={1}
-                    cornerRadius={2}
-                    shadowColor="rgba(0, 0, 0, 0.3)"
-                    shadowBlur={4}
-                    shadowOffset={{ x: 0, y: 2 }}
-                  />
+                  {/* Main component body */}
+                  {style.specialShape === 'hexagon' ? (
+                    renderHexagon(centerX, rectY, rectH, odW / 2, style)
+                  ) : (
+                    <>
+                      {/* Left outer wall */}
+                      <Rect
+                        x={centerX - odW / 2}
+                        y={rectY}
+                        width={outerW}
+                        height={rectH}
+                        fill={style.fillColor}
+                        stroke={style.strokeColor}
+                        strokeWidth={style.strokeWidth}
+                        cornerRadius={2}
+                        opacity={style.opacity}
+                        shadowColor="rgba(0, 0, 0, 0.3)"
+                        shadowBlur={4}
+                        shadowOffset={{ x: 0, y: 2 }}
+                      />
 
-                  <Rect
-                    x={innerX}
-                    y={rectY}
-                    width={idW}
-                    height={rectH}
-                    fill={AppleColors.tubing}
-                    stroke={AppleColors.borderLine}
-                    strokeWidth={0.8}
-                    cornerRadius={1}
-                    opacity={0.6}
-                  />
+                      {/* Inner bore */}
+                      <Rect
+                        x={innerX}
+                        y={rectY}
+                        width={idW}
+                        height={rectH}
+                        fill={
+                          style.pattern === 'gradient'
+                            ? 'url(#tubing-gradient)'
+                            : AppleColors.background
+                        }
+                        stroke={style.strokeColor}
+                        strokeWidth={0.8}
+                        cornerRadius={1}
+                        opacity={0.8}
+                      />
 
-                  <Rect
-                    x={centerX + idW / 2}
-                    y={rectY}
-                    width={outerW}
-                    height={rectH}
-                    fill={componentColor}
-                    stroke={AppleColors.borderLine}
-                    strokeWidth={1}
-                    cornerRadius={2}
-                    shadowColor="rgba(0, 0, 0, 0.3)"
-                    shadowBlur={4}
-                    shadowOffset={{ x: 0, y: 2 }}
-                  />
+                      {/* Right outer wall */}
+                      <Rect
+                        x={centerX + idW / 2}
+                        y={rectY}
+                        width={outerW}
+                        height={rectH}
+                        fill={style.fillColor}
+                        stroke={style.strokeColor}
+                        strokeWidth={style.strokeWidth}
+                        cornerRadius={2}
+                        opacity={style.opacity}
+                        shadowColor="rgba(0, 0, 0, 0.3)"
+                        shadowBlur={4}
+                        shadowOffset={{ x: 0, y: 2 }}
+                      />
+                    </>
+                  )}
 
+                  {/* Special shape overlays */}
+                  {style.specialShape === 'lhorn' &&
+                    renderLHorn(centerX, rectY, rectH, odW / 2, style)}
+                  {style.specialShape === 'triangular' &&
+                    renderTriangularWedges(
+                      centerX,
+                      rectY,
+                      rectH,
+                      idW,
+                      odW / 2,
+                      style
+                    )}
+                  {style.specialShape === 'motor' &&
+                    renderMotorIcon(centerX, rectY, rectH, odW / 2, style)}
+
+                  {/* Pattern overlays */}
+                  {style.pattern === 'dotted' &&
+                    renderDottedPattern(centerX, rectY, rectH, odW, idW)}
+                  {style.pattern === 'mesh' &&
+                    renderMeshPattern(centerX, rectY, rectH, odW, idW)}
+
+                  {/* Depth lines and labels */}
                   <Line
                     points={[lineLeftX, rectY, lineRightX, rectY]}
                     stroke={AppleColors.gridLine}
@@ -536,9 +1287,9 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
                       <Line
                         points={[
                           lineLeftX,
-                          calcY(row.bottom),
+                          depthConverter(row.bottom),
                           lineRightX,
-                          calcY(row.bottom),
+                          depthConverter(row.bottom),
                         ]}
                         stroke={AppleColors.gridLine}
                         strokeWidth={1}
@@ -547,7 +1298,7 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
                       />
                       <Text
                         x={labelX}
-                        y={calcY(row.bottom) - 8}
+                        y={depthConverter(row.bottom) - 8}
                         text={`${row.bottom.toFixed(1)} ft`}
                         fontSize={11}
                         fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
@@ -560,6 +1311,7 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
               );
             })}
 
+            {/* Center line */}
             <Line
               points={[centerX, PADDING, centerX, size.height - PADDING]}
               stroke={AppleColors.accentLine}
@@ -569,6 +1321,7 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
             />
           </Layer>
 
+          {/* Tooltip Layer */}
           <Layer>
             {tooltip.text && (
               <Group>
@@ -605,6 +1358,7 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
             )}
           </Layer>
 
+          {/* Nodal Point Layer */}
           {showNodalPoint && (
             <Layer>
               <Circle
@@ -627,28 +1381,18 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
                 shadowBlur={6}
                 shadowOffset={{ x: 0, y: 3 }}
                 dragBoundFunc={pos => {
-                  // Calculate the valid Y range based on zones
-                  let minY = PADDING;
-                  let maxY = PADDING + innerHeight;
-
-                  if (zones.tubing) {
-                    minY = zones.tubing.startY;
-                    maxY = zones.tubing.startY + zones.tubing.height;
-                  }
-
-                  if (zones.bha) {
-                    maxY = zones.bha.startY + zones.bha.height;
-                  }
-
+                  const minY = depthToY(overallDepthRange.min);
+                  const maxY = depthToY(overallDepthRange.max);
+                  const y = Math.max(minY, Math.min(maxY, pos.y));
                   return {
                     x: centerX,
-                    y: Math.min(Math.max(pos.y, minY), maxY),
+                    y,
                   };
                 }}
                 onDragMove={e => {
                   const y = e.target.y();
                   const depth = yToDepth(y);
-                  const validDepth = Math.max(depth, initialTop);
+                  const validDepth = Math.max(depth, overallDepthRange.min);
                   setNodalDepth(validDepth);
                   onNodalPointDepth(validDepth);
                 }}
@@ -675,10 +1419,9 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
                   if (container) {
                     container.style.cursor = 'grab';
                   }
-                  // Ensure final position is accurate
                   const y = e.target.y();
                   const depth = yToDepth(y);
-                  const validDepth = Math.max(depth, initialTop);
+                  const validDepth = Math.max(depth, overallDepthRange.min);
                   setNodalDepth(validDepth);
                   onNodalPointDepth(validDepth);
                 }}
@@ -704,9 +1447,9 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
             </Layer>
           )}
 
+          {/* Gas Lift Layer */}
           {gasLiftEnabled && (
             <Layer>
-              {/* Gas lift marker glow */}
               <Circle
                 x={centerX - 30}
                 y={gasLiftY}
@@ -715,30 +1458,38 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
                 opacity={0.6}
               />
 
-              {/* Gas lift arrow */}
               <Group
                 x={centerX - 30}
                 y={gasLiftY}
                 draggable
+                shadowColor="rgba(0, 0, 0, 0.4)"
+                shadowBlur={6}
+                shadowOffset={{ x: 0, y: 3 }}
                 dragBoundFunc={pos => {
-                  let minY = PADDING;
-                  let maxY = PADDING + innerHeight;
-
-                  if (zones.tubing) {
-                    minY = zones.tubing.startY;
-                    maxY = zones.tubing.startY + zones.tubing.height;
-                  }
-
-                  if (zones.bha) {
-                    maxY = zones.bha.startY + zones.bha.height;
-                  }
-
+                  const minY = depthToY(overallDepthRange.min);
+                  const maxY = depthToY(overallDepthRange.max);
+                  const y = Math.max(minY, Math.min(maxY, pos.y));
                   return {
                     x: centerX - 30,
-                    y: Math.min(Math.max(pos.y, minY), maxY),
+                    y,
                   };
                 }}
-                onDragEnd={handleGasLiftDragEnd}
+                onDragMove={e => {
+                  const y = e.target.y();
+                  const depth = yToDepth(y);
+                  const validDepth = Math.max(depth, overallDepthRange.min);
+                  setGasLiftValue('injectionDepth', validDepth);
+                }}
+                onDragEnd={e => {
+                  const container = e.target.getStage()?.container();
+                  if (container) {
+                    container.style.cursor = 'grab';
+                  }
+                  const y = e.target.y();
+                  const depth = yToDepth(y);
+                  const validDepth = Math.max(depth, overallDepthRange.min);
+                  setGasLiftValue('injectionDepth', validDepth);
+                }}
                 onMouseEnter={e => {
                   const container = e.target.getStage()?.container();
                   if (container) {
@@ -765,9 +1516,6 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
                   fill={AppleColors.gasLift}
                   stroke={AppleColors.gasLift}
                   strokeWidth={2}
-                  shadowColor="rgba(0, 0, 0, 0.4)"
-                  shadowBlur={4}
-                  shadowOffset={{ x: 0, y: 2 }}
                 />
               </Group>
 
@@ -785,7 +1533,6 @@ export const BhaDiagramKonva: FC<BhaDiagramKonvaProps> = ({
                 fontStyle="600"
               />
 
-              {/* Gas lift connection line */}
               <Line
                 points={[lineLeftX, gasLiftY, centerX - 35, gasLiftY]}
                 stroke={AppleColors.gasLift}

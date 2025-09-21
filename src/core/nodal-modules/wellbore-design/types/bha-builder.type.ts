@@ -16,4 +16,5 @@ export interface BhaRowData {
   od: number; // Outer diameter in inches
   top: number; // Top depth in feet
   type: string; // Type of BHA component
+  size?: string; // Size of the component
 }

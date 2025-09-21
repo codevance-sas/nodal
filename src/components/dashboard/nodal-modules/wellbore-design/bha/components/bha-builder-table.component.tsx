@@ -1,20 +1,23 @@
+'use client';
+import { BhaRowData } from '@/core/nodal-modules/wellbore-design/types/bha-builder.type';
 import {
-  Box,
   Button,
   Group,
   MantineProvider,
   NumberInput,
   TextInput,
 } from '@mantine/core';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   MantineReactTable,
+  type MRT_Cell,
   type MRT_ColumnDef,
   type MRT_Row,
-  type MRT_Cell,
 } from 'mantine-react-table';
-import { useTheme } from 'next-themes';
 import { nanoid } from 'nanoid';
-import { Checkbox } from '@/components/ui/checkbox';
+import { recalcProps } from '@/core/nodal-modules/wellbore-design/util/bha-recalc.util';
+import { SearchableDropdown } from './searchable-dropdown.component';
+import { CasingSizeDropdown } from './casing-size-dropdown.component';
 import {
   Select,
   SelectContent,
@@ -22,24 +25,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { TableHeaderControls } from './table-header-controls.component';
 import { toast } from '@/hooks/use-toast';
 import {
-  useMemo,
-  useState,
-  useCallback,
-  useRef,
   type FC,
   type KeyboardEvent,
+  useCallback,
   useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from 'react';
-
-import { Button as ShadcnButton } from '@/components/ui/button';
-import { TableHeaderControls } from './table-header-controls.component';
-
-import { BhaRowData } from '@/core/nodal-modules/wellbore-design/types/bha-builder.type';
-import { recalcProps } from '@/core/nodal-modules/wellbore-design/util/bha-recalc.util';
 import { useBhaStore } from '@/store/nodal-modules/wellbore-design/use-bha.store';
-import { Input } from '@/components/ui/input';
+import { useTheme } from 'next-themes';
 
 interface BhaBuilderTableProps {
   addRow: (row: BhaRowData) => void;
@@ -54,6 +52,7 @@ interface BhaBuilderTableProps {
   setInitialTop: (top: number) => void;
   setRows: (rows: BhaRowData[]) => void;
   validate: (rows: BhaRowData[]) => string[];
+  totalDepth?: number;
   onDownload?: () => void;
 }
 
@@ -72,8 +71,8 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
   setRows,
   validate,
   isAverageTubingJointsVisible,
-  setInitialTop,
-  onDownload
+  totalDepth = 1000,
+  onDownload,
 }) => {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -94,6 +93,13 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
 
   // Track which fields are being actively edited
   const [activeFields, setActiveFields] = useState<Set<string>>(new Set());
+
+  // Force re-render when rows change to ensure Select components show correct values
+  const [forceUpdate, setForceUpdate] = useState(0);
+
+  useEffect(() => {
+    setForceUpdate(prev => prev + 1);
+  }, [rows]);
 
   // Pagination state
   const [pagination, setPagination] = useState({
@@ -480,6 +486,39 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
   }, [rows, initialTop, addRow]);
 
   /**
+   * Handles selection of a casing standard and auto-populates a new row
+   */
+  const handleCasingStandardSelect = useCallback(
+    (standard: BhaRowData) => {
+      const top = rows.length > 0 ? rows[rows.length - 1].bottom : initialTop;
+      const bottom = top + standard.length;
+
+      const newRow: BhaRowData = {
+        id: nanoid(),
+        type: 'Casing Joint',
+        top,
+        count: 1,
+        length: standard.length,
+        bottom,
+        idVal: standard.idVal,
+        od: standard.od,
+        desc: standard.desc || standard.type,
+        size: standard.type,
+      };
+
+      // Use addRow function to properly add the row and handle all logic
+      addRow(newRow);
+
+      // Show success toast
+      toast({
+        title: 'Standard casing added',
+        description: `Added ${standard.type} with standard specifications`,
+      });
+    },
+    [rows, initialTop, totalDepth, addRow]
+  );
+
+  /**
    * Removes a row by ID
    */
   const removeRow = useCallback(
@@ -548,14 +587,14 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
     });
 
     const filtered = rows.filter(r => !selected.has(r.id));
-    
+
     // Clear drafts for removed rows
     setDrafts(prev => {
       const next = new Map(prev);
       selected.forEach(id => next.delete(id));
       return next;
     });
-    
+
     const recalc = recalcTopBtm({
       rows: filtered,
       initialTop,
@@ -583,8 +622,17 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
   const copyToClipboard = useCallback(async () => {
     try {
       // Define CSV headers
-      const headers = ['Type', 'Top [ft]', 'Count', 'Length [ft]', 'OD [in]', 'ID [in]', 'Bottom [ft]', 'Description'];
-      
+      const headers = [
+        'Type',
+        'Top [ft]',
+        'Count',
+        'Length [ft]',
+        'OD [in]',
+        'ID [in]',
+        'Bottom [ft]',
+        'Description',
+      ];
+
       // Convert rows to CSV format
       const csvRows = rows.map(row => [
         row.type || '',
@@ -594,17 +642,17 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
         row.od.toFixed(2),
         row.idVal.toFixed(2),
         row.bottom.toFixed(2),
-        row.desc || ''
+        row.desc || '',
       ]);
-      
+
       // Combine headers and data
       const csvContent = [headers, ...csvRows]
         .map(row => row.map(cell => `"${cell}"`).join(','))
         .join('\n');
-      
+
       // Copy to clipboard
       await navigator.clipboard.writeText(csvContent);
-      
+
       // Show success toast
       toast({
         title: 'Success',
@@ -760,15 +808,14 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
       id: 'select',
       header: 'Select',
       Header: () => (
-         <div className="flex items-center justify-center w-full h-full">
-           <Checkbox
-             checked={isIndeterminate ? 'indeterminate' : isAllSelected}
-             onCheckedChange={handleSelectAll}
-           />
-         </div>
-       ),
+        <div className="flex items-center justify-center w-full h-full">
+          <Checkbox
+            checked={isIndeterminate ? 'indeterminate' : isAllSelected}
+            onCheckedChange={handleSelectAll}
+          />
+        </div>
+      ),
       Cell: ({ row }: MRT_Cell<BhaRowData>) => {
-        console.log('[BhaBuilderTable.select] row', row);
         return (
           <div className="flex items-center justify-center w-full h-full">
             <Checkbox
@@ -790,35 +837,72 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
       accessorKey: 'type',
       header: 'TYPE',
       size: 50,
-      Cell: ({ row }: MRT_Cell<BhaRowData>) => (
-        <Select
-          value={getCurrentValue(row.original.id, 'type') as string}
-          onValueChange={value => {
-            handleFieldChange(row.original.id, 'type', value || '');
-          }}
-          onOpenChange={open => {
-            if (open) handleFocus(row.original.id, 'type');
-            else handleBlur(row.original.id, 'type');
-          }}
-        >
-          <SelectTrigger
-            className={`w-[100px] h-8 ${
-              hasFieldError(row.original.id, 'type') ? 'border-red-500' : ''
-            }`}
+      Cell: ({ row }: MRT_Cell<BhaRowData>) => {
+        const currentValue = getCurrentValue(row.original.id, 'type') as string;
+        const selectValue = currentValue ?? '';
+        const validValue = options.includes(selectValue) ? selectValue : '';
+
+        return (
+          <Select
+            value={validValue}
+            onValueChange={value => {
+              handleFieldChange(row.original.id, 'type', value ?? '');
+            }}
+            onOpenChange={open => {
+              if (open) handleFocus(row.original.id, 'type');
+              else handleBlur(row.original.id, 'type');
+            }}
           >
-            <SelectValue placeholder="Select type" />
-          </SelectTrigger>
-          <SelectContent className="z-[1300]">
-            {options.map(option => (
-              <SelectItem key={option} value={option}>
-                {option}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      ),
+            <SelectTrigger
+              className={`w-[100px] h-8 ${
+                hasFieldError(row.original.id, 'type') ? 'border-red-500' : ''
+              }`}
+            >
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent className="z-[1300]">
+              {options.map(option => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      },
       enableSorting: false,
     },
+    ...(nameTable === 'CASING'
+      ? [
+          {
+            accessorKey: 'size',
+            header: 'SIZE',
+            size: 80,
+            Cell: ({ row }: MRT_Cell<BhaRowData>) => {
+              const currentValue = getCurrentValue(
+                row.original.id,
+                'size'
+              ) as string;
+
+              return (
+                <CasingSizeDropdown
+                  value={currentValue || ''}
+                  onChange={(od: number, idVal: number, size: string) => {
+                    // Update all three fields while preserving the ID
+                    handleFieldChange(row.original.id, 'od', od);
+                    handleFieldChange(row.original.id, 'idVal', idVal);
+                    handleFieldChange(row.original.id, 'size', size);
+                  }}
+                  onFocus={() => handleFocus(row.original.id, 'size')}
+                  onBlur={() => handleBlur(row.original.id, 'size')}
+                  hasError={hasFieldError(row.original.id, 'size')}
+                />
+              );
+            },
+            enableSorting: false,
+          },
+        ]
+      : []),
     {
       accessorKey: 'top',
       header: 'TOP [ft]',
@@ -1026,71 +1110,85 @@ export const BhaBuilderTable: FC<BhaBuilderTableProps> = ({
         onDownload={onDownload}
       />
 
+      {/* Casing Standard Library Search - Only show for CASING table */}
+      {nameTable === 'CASING' && (
+        <div className="px-6 pb-3">
+          <SearchableDropdown
+            onSelect={handleCasingStandardSelect}
+            className="max-w-sm"
+          />
+        </div>
+      )}
+
       <div className="backdrop-blur-sm rounded-xl overflow-hidden shadow-xl transition-colors duration-200 bg-card border border-border">
         <div suppressHydrationWarning>
           <MantineProvider
-            theme={{ colorScheme: mounted && theme === 'dark' ? 'dark' : 'light' }}
+            theme={{
+              colorScheme: mounted && theme === 'dark' ? 'dark' : 'light',
+            }}
           >
-          <MantineReactTable
-            autoResetPageIndex={false}
-            columns={columns}
-            data={rows}
-            enableRowOrdering
-            enableTopToolbar={false}
-            enableColumnActions={false}
-            enablePagination={true}
-            enableBottomToolbar={true}
-            paginationDisplayMode="pages"
-            initialState={{
-              pagination: { pageSize: 10, pageIndex: 0 },
-            }}
-            state={{
-              pagination,
-            }}
-            onPaginationChange={setPagination}
-            mantineRowDragHandleProps={({ table }) => ({
-              onDragEnd: () => {
-                const { draggingRow, hoveredRow } = table.getState();
-                if (draggingRow && hoveredRow) {
-                  setActiveFields(new Set());
-                  debounceTimers.current.forEach(timer => clearTimeout(timer));
-                  debounceTimers.current.clear();
+            <MantineReactTable
+              autoResetPageIndex={false}
+              columns={columns}
+              data={rows}
+              enableRowOrdering
+              enableTopToolbar={false}
+              enableColumnActions={false}
+              enablePagination={true}
+              enableBottomToolbar={true}
+              paginationDisplayMode="pages"
+              initialState={{
+                pagination: { pageSize: 10, pageIndex: 0 },
+              }}
+              state={{
+                pagination,
+              }}
+              onPaginationChange={setPagination}
+              mantineRowDragHandleProps={({ table }) => ({
+                onDragEnd: () => {
+                  const { draggingRow, hoveredRow } = table.getState();
+                  if (draggingRow && hoveredRow) {
+                    setActiveFields(new Set());
+                    debounceTimers.current.forEach(timer =>
+                      clearTimeout(timer)
+                    );
+                    debounceTimers.current.clear();
 
-                  const newData = [...rows];
-                  newData.splice(
-                    (hoveredRow as MRT_Row<BhaRowData>).index,
-                    0,
-                    newData.splice(draggingRow.index, 1)[0]
-                  );
-                  const recalc = recalcTopBtm({
-                    rows: newData,
-                    initialTop,
-                    drafts: new Map(),
-                    averageTubingJoints,
-                  });
-                  const errors = validate(recalc);
-                  if (errors.length > 0) {
-                    setError(errors.join('; '));
-                  } else {
-                    setRows(recalc);
-                    setError(null);
+                    const newData = [...rows];
+                    newData.splice(
+                      (hoveredRow as MRT_Row<BhaRowData>).index,
+                      0,
+                      newData.splice(draggingRow.index, 1)[0]
+                    );
+                    const recalc = recalcTopBtm({
+                      rows: newData,
+                      initialTop,
+                      drafts: new Map(),
+                      averageTubingJoints,
+                    });
+                    const errors = validate(recalc);
+                    if (errors.length > 0) {
+                      setError(errors.join('; '));
+                    } else {
+                      setRows(recalc);
+                      setError(null);
+                    }
+                    updateValidationState(recalc);
                   }
-                  updateValidationState(recalc);
-                }
-              },
-            })}
-            mantineTableProps={{
-              highlightOnHover: true,
-              withColumnBorders: true,
-              striped: false,
-              style: { maxHeight: '600px' },
-            }}
-            mantineTableContainerProps={{
-              style: { maxHeight: '600px', overflowY: 'auto' },
-            }}
-            mantinePaginationProps={{}}
-          />
-        </MantineProvider>
+                },
+              })}
+              mantineTableProps={{
+                highlightOnHover: true,
+                withColumnBorders: true,
+                striped: false,
+                style: { maxHeight: '600px' },
+              }}
+              mantineTableContainerProps={{
+                style: { maxHeight: '600px', overflowY: 'auto' },
+              }}
+              mantinePaginationProps={{}}
+            />
+          </MantineProvider>
         </div>
       </div>
     </div>

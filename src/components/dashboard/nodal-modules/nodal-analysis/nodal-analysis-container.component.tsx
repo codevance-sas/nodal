@@ -9,7 +9,6 @@ import { NodalAnalysisChartsModule } from './components/nodal-analysis-charts-mo
 import { NodalAnalysisMultiCorrelationModule } from './components/nodal-analysis-multi-correlation-module.component';
 import { NodalAnalysisSensitivityModule } from './components/nodal-analysis-sensitivity-module.component';
 import { useAnalysisStore } from '@/store/nodal-modules/nodal-analysis/use-nodal-analysis.store';
-import { ContextualDescriptionPanel } from '@/components/dashboard/nodal-modules/common/contextual-description-panel.component';
 import { useBhaStore } from '@/store/nodal-modules/wellbore-design/use-bha.store';
 import { WellboreDesignRequiredModal } from './components/wellbore-design-required-modal.component';
 import { mergeBhaAndCasingRows } from '@/core/nodal-modules/nodal-analysis/util/merge-bha-and-casing-rows.util';
@@ -19,7 +18,10 @@ import dynamic from 'next/dynamic';
 import type { BhaDiagramKonvaProps } from '../wellbore-design/bha/components/bha-diagram-konva.component';
 
 const BhaDiagramKonva = dynamic(
-  () => import('../wellbore-design/bha/components/bha-diagram-konva.component').then(mod => ({ default: mod.BhaDiagramKonva })),
+  () =>
+    import(
+      '../wellbore-design/bha/components/bha-diagram-konva.component'
+    ).then(mod => ({ default: mod.BhaDiagramKonva })),
   { ssr: false }
 );
 import { Button } from '@/components/ui/button';
@@ -37,8 +39,6 @@ import {
   recalcTopBtmBha,
   recalcTopBtmCasing,
 } from '@/core/nodal-modules/wellbore-design/util/bha-recalc.util';
-
-
 
 export const NodalAnalysisContainer: React.FC = () => {
   const { activeSection } = useAnalysisStore();
@@ -123,7 +123,7 @@ export const NodalAnalysisContainer: React.FC = () => {
                 </div>
 
                 <MemoizedDiagram
-                  exaggeration={15}
+                  exaggeration={10}
                   showNodalPoint={true}
                   onNodalPointDepth={(depth: number) => setNodalDepth(depth)}
                 />

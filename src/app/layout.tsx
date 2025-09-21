@@ -28,7 +28,7 @@ export default function RootLayout({
           rel="stylesheet"
         ></link>
       </head>
-      <body className="font-body antialiased overflow-hidden">
+      <body className="font-body antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

@@ -26,27 +26,10 @@ import dynamic from 'next/dynamic';
 
 const BhaDiagramKonva = dynamic(
   () =>
-    import('./bha/components/bha-diagram-konva.component').then(mod => ({
-      default: mod.BhaDiagramKonva,
-    })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex items-center justify-center h-[100%] w-full">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-2 border-system-blue border-t-transparent mx-auto" />
-          <div className="space-y-2">
-            <p className="text-title-3 font-semibold text-foreground">
-              Cargando diagrama BHA...
-            </p>
-            <p className="text-callout text-muted-foreground">
-              Inicializando componente interactivo
-            </p>
-          </div>
-        </div>
-      </div>
-    ),
-  }
+    import(
+      '../wellbore-design/bha/components/bha-diagram-konva.component'
+    ).then(mod => ({ default: mod.BhaDiagramKonva })),
+  { ssr: false }
 );
 
 interface BHADesignTabProps {
@@ -384,6 +367,7 @@ export const BHADesignTab: FC<BHADesignTabProps> = ({ nodalColors }) => {
                             validate={validate}
                             averageTubingJoints={averageTubingJoints}
                             setAverageTubingJoints={setAverageTubingJoints}
+                            totalDepth={nodalDepth}
                           />
                         </div>
                       </TabsContent>
