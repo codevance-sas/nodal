@@ -35,8 +35,6 @@ export const AdminLogInComponent = () => {
         password,
       })) as any;
 
-      console.log('[result]', result);
-
       if (result?.data?.success) {
         toast.success('Successful login.');
         router.push('/dashboard/nodal-modules/wellbore-design');

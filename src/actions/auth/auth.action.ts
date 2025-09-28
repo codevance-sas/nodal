@@ -387,8 +387,6 @@ export async function validateTokenAction(
 
     const serviceResult = await validateToken(input);
 
-    console.log('[validateTokenAction] serviceResult', serviceResult);
-
     if (serviceResult.success) {
       logger.info(actionName, `${actionName} completed successfully`, {
         dataKeys: Object.keys(serviceResult.data),
@@ -477,20 +475,24 @@ function validateCreateDomainInput(
 
   // Validate domain or email
   if (!input.domain || typeof input.domain !== 'string') {
-    logger.warn(context, 'Invalid or missing domain/email', { domain: input.domain });
+    logger.warn(context, 'Invalid or missing domain/email', {
+      domain: input.domain,
+    });
     return false;
   }
 
   // Domain format validation
   const domainRegex =
     /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-  
+
   // Email format validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  
+
   // Check if input is either a valid domain or a valid email
   if (!domainRegex.test(input.domain) && !emailRegex.test(input.domain)) {
-    logger.warn(context, 'Invalid domain or email format', { domain: input.domain });
+    logger.warn(context, 'Invalid domain or email format', {
+      domain: input.domain,
+    });
     return false;
   }
 
@@ -569,7 +571,9 @@ function validateRemoveDomainInput(
   context: string
 ): domain is string {
   if (!domain || typeof domain !== 'string') {
-    logger.warn(context, 'Invalid domain/email parameter', { domain: typeof domain });
+    logger.warn(context, 'Invalid domain/email parameter', {
+      domain: typeof domain,
+    });
     return false;
   }
 
@@ -581,10 +585,10 @@ function validateRemoveDomainInput(
   // Domain format validation
   const domainRegex =
     /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-  
+
   // Email format validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  
+
   // Check if input is either a valid domain or a valid email
   if (!domainRegex.test(domain) && !emailRegex.test(domain)) {
     logger.warn(context, 'Invalid domain or email format', { domain });

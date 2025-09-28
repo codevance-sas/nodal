@@ -21,8 +21,6 @@ import {
 import { REQUEST_CONFIG } from '@/config/request.config';
 import { cookies } from 'next/headers';
 
-const logger = createServiceLogger('Auth');
-
 function handleAPIError(
   error: any,
   endpoint: string,
@@ -92,19 +90,8 @@ export async function login(
 
   const url = `${REQUEST_CONFIG.BASE_URL}/auth/login`;
 
-  logger.info('login', 'Starting login request', {
-    endpoint: 'auth/login',
-    url,
-  });
-
   for (let attempt = 1; attempt <= REQUEST_CONFIG.MAX_RETRIES; attempt++) {
     try {
-      logger.info('login', `Attempt ${attempt}/${REQUEST_CONFIG.MAX_RETRIES}`, {
-        endpoint: 'auth/login',
-        attempt,
-        url,
-      });
-
       const response = await RequestUtils.fetchWithTimeout(
         url,
         {
@@ -119,20 +106,8 @@ export async function login(
         REQUEST_CONFIG.TIMEOUT
       );
 
-      logger.info('login', 'Response received', {
-        endpoint: 'auth/login',
-        attempt,
-        status: response.status,
-        statusText: response.statusText,
-      });
-
       if (response.ok) {
         const data = await response.json();
-        logger.info('login', 'Login successful', {
-          endpoint: 'auth/login',
-          attempt,
-          dataKeys: data ? Object.keys(data) : [],
-        });
 
         return {
           success: true,
@@ -162,13 +137,6 @@ export async function login(
         timestamp: new Date().toISOString(),
       };
 
-      logger.error('login', 'API Error', {
-        endpoint: 'auth/login',
-        attempt,
-        status: response.status,
-        error: errorData,
-      });
-
       if (
         response.status >= 400 &&
         response.status < 500 &&
@@ -182,12 +150,7 @@ export async function login(
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
-        logger.warn('login', `Retrying in ${delay}ms`, {
-          endpoint: 'auth/login',
-          attempt,
-          nextAttempt: attempt + 1,
-          delay,
-        });
+
         await RequestUtils.delay(delay);
         continue;
       }
@@ -197,24 +160,11 @@ export async function login(
         error: apiError,
       };
     } catch (error: any) {
-      logger.error('login', `Error in attempt ${attempt}`, {
-        endpoint: 'auth/login',
-        attempt,
-        error: error.message,
-        stack: error.stack,
-      });
-
       const apiError = handleAPIError(error, 'auth/login', attempt);
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
-        logger.warn('login', `Retrying after error in ${delay}ms`, {
-          endpoint: 'auth/login',
-          attempt,
-          nextAttempt: attempt + 1,
-          delay,
-          errorType: error.name,
-        });
+
         await RequestUtils.delay(delay);
         continue;
       }
@@ -243,23 +193,8 @@ export async function requestToken(
 
   const url = `${REQUEST_CONFIG.BASE_URL}/auth/request-token`;
 
-  logger.info('requestToken', 'Starting request token request', {
-    endpoint: 'auth/request-token',
-    url,
-  });
-
   for (let attempt = 1; attempt <= REQUEST_CONFIG.MAX_RETRIES; attempt++) {
     try {
-      logger.info(
-        'requestToken',
-        `Attempt ${attempt}/${REQUEST_CONFIG.MAX_RETRIES}`,
-        {
-          endpoint: 'auth/request-token',
-          attempt,
-          url,
-        }
-      );
-
       const response = await RequestUtils.fetchWithTimeout(
         url,
         {
@@ -274,20 +209,8 @@ export async function requestToken(
         REQUEST_CONFIG.TIMEOUT
       );
 
-      logger.info('requestToken', 'Response received', {
-        endpoint: 'auth/request-token',
-        attempt,
-        status: response.status,
-        statusText: response.statusText,
-      });
-
       if (response.ok) {
         const data = await response.json();
-        logger.info('requestToken', 'Token request successful', {
-          endpoint: 'auth/request-token',
-          attempt,
-          dataKeys: data ? Object.keys(data) : [],
-        });
 
         return {
           success: true,
@@ -317,13 +240,6 @@ export async function requestToken(
         timestamp: new Date().toISOString(),
       };
 
-      logger.error('requestToken', 'API Error', {
-        endpoint: 'auth/request-token',
-        attempt,
-        status: response.status,
-        error: errorData,
-      });
-
       if (
         response.status >= 400 &&
         response.status < 500 &&
@@ -337,12 +253,7 @@ export async function requestToken(
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
-        logger.warn('requestToken', `Retrying in ${delay}ms`, {
-          endpoint: 'auth/request-token',
-          attempt,
-          nextAttempt: attempt + 1,
-          delay,
-        });
+
         await RequestUtils.delay(delay);
         continue;
       }
@@ -352,24 +263,11 @@ export async function requestToken(
         error: apiError,
       };
     } catch (error: any) {
-      logger.error('requestToken', `Error in attempt ${attempt}`, {
-        endpoint: 'auth/request-token',
-        attempt,
-        error: error.message,
-        stack: error.stack,
-      });
-
       const apiError = handleAPIError(error, 'auth/request-token', attempt);
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
-        logger.warn('requestToken', `Retrying after error in ${delay}ms`, {
-          endpoint: 'auth/request-token',
-          attempt,
-          nextAttempt: attempt + 1,
-          delay,
-          errorType: error.name,
-        });
+
         await RequestUtils.delay(delay);
         continue;
       }
@@ -398,23 +296,8 @@ export async function validateToken(
 
   const url = `${REQUEST_CONFIG.BASE_URL}/auth/validate-token`;
 
-  logger.info('validateToken', 'Starting validate token request', {
-    endpoint: 'auth/validate-token',
-    url,
-  });
-
   for (let attempt = 1; attempt <= REQUEST_CONFIG.MAX_RETRIES; attempt++) {
     try {
-      logger.info(
-        'validateToken',
-        `Attempt ${attempt}/${REQUEST_CONFIG.MAX_RETRIES}`,
-        {
-          endpoint: 'auth/validate-token',
-          attempt,
-          url,
-        }
-      );
-
       const response = await RequestUtils.fetchWithTimeout(
         url,
         {
@@ -429,20 +312,8 @@ export async function validateToken(
         REQUEST_CONFIG.TIMEOUT
       );
 
-      logger.info('validateToken', 'Response received', {
-        endpoint: 'auth/validate-token',
-        attempt,
-        status: response.status,
-        statusText: response.statusText,
-      });
-
       if (response.ok) {
         const data = await response.json();
-        logger.info('validateToken', 'Token validation successful', {
-          endpoint: 'auth/validate-token',
-          attempt,
-          dataKeys: data ? Object.keys(data) : [],
-        });
 
         if (data.success) {
           return {
@@ -467,7 +338,6 @@ export async function validateToken(
       let errorData;
       try {
         errorData = await response.json();
-        console.log('[validateToken] errorData', errorData);
       } catch {
         errorData = {
           detail: [
@@ -487,13 +357,6 @@ export async function validateToken(
         timestamp: new Date().toISOString(),
       };
 
-      logger.error('validateToken', 'API Error', {
-        endpoint: 'auth/validate-token',
-        attempt,
-        status: response.status,
-        error: errorData,
-      });
-
       if (
         response.status >= 400 &&
         response.status < 500 &&
@@ -507,12 +370,7 @@ export async function validateToken(
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
-        logger.warn('validateToken', `Retrying in ${delay}ms`, {
-          endpoint: 'auth/validate-token',
-          attempt,
-          nextAttempt: attempt + 1,
-          delay,
-        });
+
         await RequestUtils.delay(delay);
         continue;
       }
@@ -522,24 +380,11 @@ export async function validateToken(
         error: apiError,
       };
     } catch (error: any) {
-      logger.error('validateToken', `Error in attempt ${attempt}`, {
-        endpoint: 'auth/validate-token',
-        attempt,
-        error: error.message,
-        stack: error.stack,
-      });
-
       const apiError = handleAPIError(error, 'auth/validate-token', attempt);
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
-        logger.warn('validateToken', `Retrying after error in ${delay}ms`, {
-          endpoint: 'auth/validate-token',
-          attempt,
-          nextAttempt: attempt + 1,
-          delay,
-          errorType: error.name,
-        });
+
         await RequestUtils.delay(delay);
         continue;
       }
@@ -598,23 +443,8 @@ export async function getAllTokens(
     };
   }
 
-  logger.info('getAllTokens', 'Starting get all tokens request', {
-    endpoint: 'auth/admin/tokens',
-    url,
-  });
-
   for (let attempt = 1; attempt <= REQUEST_CONFIG.MAX_RETRIES; attempt++) {
     try {
-      logger.info(
-        'getAllTokens',
-        `Attempt ${attempt}/${REQUEST_CONFIG.MAX_RETRIES}`,
-        {
-          endpoint: 'auth/admin/tokens',
-          attempt,
-          url,
-        }
-      );
-
       const response = await RequestUtils.fetchWithTimeout(
         url,
         {
@@ -629,20 +459,8 @@ export async function getAllTokens(
         REQUEST_CONFIG.TIMEOUT
       );
 
-      logger.info('getAllTokens', 'Response received', {
-        endpoint: 'auth/admin/tokens',
-        attempt,
-        status: response.status,
-        statusText: response.statusText,
-      });
-
       if (response.ok) {
         const data = await response.json();
-        logger.info('getAllTokens', 'Get tokens successful', {
-          endpoint: 'auth/admin/tokens',
-          attempt,
-          dataKeys: data ? Object.keys(data) : [],
-        });
 
         return {
           success: true,
@@ -672,13 +490,6 @@ export async function getAllTokens(
         timestamp: new Date().toISOString(),
       };
 
-      logger.error('getAllTokens', 'API Error', {
-        endpoint: 'auth/admin/tokens',
-        attempt,
-        status: response.status,
-        error: errorData,
-      });
-
       if (
         response.status >= 400 &&
         response.status < 500 &&
@@ -692,12 +503,7 @@ export async function getAllTokens(
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
-        logger.warn('getAllTokens', `Retrying in ${delay}ms`, {
-          endpoint: 'auth/admin/tokens',
-          attempt,
-          nextAttempt: attempt + 1,
-          delay,
-        });
+
         await RequestUtils.delay(delay);
         continue;
       }
@@ -707,24 +513,10 @@ export async function getAllTokens(
         error: apiError,
       };
     } catch (error: any) {
-      logger.error('getAllTokens', `Error in attempt ${attempt}`, {
-        endpoint: 'auth/admin/tokens',
-        attempt,
-        error: error.message,
-        stack: error.stack,
-      });
-
       const apiError = handleAPIError(error, 'auth/admin/tokens', attempt);
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
-        logger.warn('getAllTokens', `Retrying after error in ${delay}ms`, {
-          endpoint: 'auth/admin/tokens',
-          attempt,
-          nextAttempt: attempt + 1,
-          delay,
-          errorType: error.name,
-        });
         await RequestUtils.delay(delay);
         continue;
       }
@@ -775,24 +567,8 @@ export async function generateToken(
     };
   }
 
-  logger.info('generateToken', 'Starting generate token request', {
-    endpoint: 'auth/admin/generate-token',
-    url,
-    data,
-  });
-
   for (let attempt = 1; attempt <= REQUEST_CONFIG.MAX_RETRIES; attempt++) {
     try {
-      logger.info(
-        'generateToken',
-        `Attempt ${attempt}/${REQUEST_CONFIG.MAX_RETRIES}`,
-        {
-          endpoint: 'auth/admin/generate-token',
-          attempt,
-          url,
-        }
-      );
-
       const response = await RequestUtils.fetchWithTimeout(
         url,
         {
@@ -808,20 +584,8 @@ export async function generateToken(
         REQUEST_CONFIG.TIMEOUT
       );
 
-      logger.info('generateToken', 'Response received', {
-        endpoint: 'auth/admin/generate-token',
-        attempt,
-        status: response.status,
-        statusText: response.statusText,
-      });
-
       if (response.ok) {
         const data = await response.json();
-        logger.info('generateToken', 'Generate token successful', {
-          endpoint: 'auth/admin/generate-token',
-          attempt,
-          dataKeys: data ? Object.keys(data) : [],
-        });
 
         return {
           success: true,
@@ -851,13 +615,6 @@ export async function generateToken(
         timestamp: new Date().toISOString(),
       };
 
-      logger.error('generateToken', 'API Error', {
-        endpoint: 'auth/admin/generate-token',
-        attempt,
-        status: response.status,
-        error: errorData,
-      });
-
       if (
         response.status >= 400 &&
         response.status < 500 &&
@@ -871,12 +628,7 @@ export async function generateToken(
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
-        logger.warn('generateToken', `Retrying in ${delay}ms`, {
-          endpoint: 'auth/admin/generate-token',
-          attempt,
-          nextAttempt: attempt + 1,
-          delay,
-        });
+
         await RequestUtils.delay(delay);
         continue;
       }
@@ -886,13 +638,6 @@ export async function generateToken(
         error: apiError,
       };
     } catch (error: any) {
-      logger.error('generateToken', `Error in attempt ${attempt}`, {
-        endpoint: 'auth/admin/generate-token',
-        attempt,
-        error: error.message,
-        stack: error.stack,
-      });
-
       const apiError = handleAPIError(
         error,
         'auth/admin/generate-token',
@@ -901,13 +646,7 @@ export async function generateToken(
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
-        logger.warn('generateToken', `Retrying after error in ${delay}ms`, {
-          endpoint: 'auth/admin/generate-token',
-          attempt,
-          nextAttempt: attempt + 1,
-          delay,
-          errorType: error.name,
-        });
+
         await RequestUtils.delay(delay);
         continue;
       }
@@ -966,23 +705,8 @@ export async function getAllowedDomains(
     };
   }
 
-  logger.info('getAllowedDomains', 'Starting get allowed domains request', {
-    endpoint: 'auth/allowed-domains',
-    url,
-  });
-
   for (let attempt = 1; attempt <= REQUEST_CONFIG.MAX_RETRIES; attempt++) {
     try {
-      logger.info(
-        'getAllowedDomains',
-        `Attempt ${attempt}/${REQUEST_CONFIG.MAX_RETRIES}`,
-        {
-          endpoint: 'auth/allowed-domains',
-          attempt,
-          url,
-        }
-      );
-
       const response = await RequestUtils.fetchWithTimeout(
         url,
         {
@@ -997,20 +721,8 @@ export async function getAllowedDomains(
         REQUEST_CONFIG.TIMEOUT
       );
 
-      logger.info('getAllowedDomains', 'Response received', {
-        endpoint: 'auth/allowed-domains',
-        attempt,
-        status: response.status,
-        statusText: response.statusText,
-      });
-
       if (response.ok) {
         const data = await response.json();
-        logger.info('getAllowedDomains', 'Get allowed domains successful', {
-          endpoint: 'auth/allowed-domains',
-          attempt,
-          dataKeys: data ? Object.keys(data) : [],
-        });
 
         return {
           success: true,
@@ -1040,13 +752,6 @@ export async function getAllowedDomains(
         timestamp: new Date().toISOString(),
       };
 
-      logger.error('getAllowedDomains', 'API Error', {
-        endpoint: 'auth/allowed-domains',
-        attempt,
-        status: response.status,
-        error: errorData,
-      });
-
       if (
         response.status >= 400 &&
         response.status < 500 &&
@@ -1060,12 +765,7 @@ export async function getAllowedDomains(
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
-        logger.warn('getAllowedDomains', `Retrying in ${delay}ms`, {
-          endpoint: 'auth/allowed-domains',
-          attempt,
-          nextAttempt: attempt + 1,
-          delay,
-        });
+
         await RequestUtils.delay(delay);
         continue;
       }
@@ -1075,24 +775,11 @@ export async function getAllowedDomains(
         error: apiError,
       };
     } catch (error: any) {
-      logger.error('getAllowedDomains', `Error in attempt ${attempt}`, {
-        endpoint: 'auth/allowed-domains',
-        attempt,
-        error: error.message,
-        stack: error.stack,
-      });
-
       const apiError = handleAPIError(error, 'auth/allowed-domains', attempt);
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
-        logger.warn('getAllowedDomains', `Retrying after error in ${delay}ms`, {
-          endpoint: 'auth/allowed-domains',
-          attempt,
-          nextAttempt: attempt + 1,
-          delay,
-          errorType: error.name,
-        });
+
         await RequestUtils.delay(delay);
         continue;
       }
@@ -1143,24 +830,8 @@ export async function addAllowedDomain(
     };
   }
 
-  logger.info('addAllowedDomain', 'Starting add allowed domain request', {
-    endpoint: 'auth/allowed-domains',
-    url,
-    data,
-  });
-
   for (let attempt = 1; attempt <= REQUEST_CONFIG.MAX_RETRIES; attempt++) {
     try {
-      logger.info(
-        'addAllowedDomain',
-        `Attempt ${attempt}/${REQUEST_CONFIG.MAX_RETRIES}`,
-        {
-          endpoint: 'auth/allowed-domains',
-          attempt,
-          url,
-        }
-      );
-
       const response = await RequestUtils.fetchWithTimeout(
         url,
         {
@@ -1176,20 +847,8 @@ export async function addAllowedDomain(
         REQUEST_CONFIG.TIMEOUT
       );
 
-      logger.info('addAllowedDomain', 'Response received', {
-        endpoint: 'auth/allowed-domains',
-        attempt,
-        status: response.status,
-        statusText: response.statusText,
-      });
-
       if (response.ok) {
         const data = await response.json();
-        logger.info('addAllowedDomain', 'Add allowed domain successful', {
-          endpoint: 'auth/allowed-domains',
-          attempt,
-          dataKeys: data ? Object.keys(data) : [],
-        });
 
         return {
           success: true,
@@ -1219,13 +878,6 @@ export async function addAllowedDomain(
         timestamp: new Date().toISOString(),
       };
 
-      logger.error('addAllowedDomain', 'API Error', {
-        endpoint: 'auth/allowed-domains',
-        attempt,
-        status: response.status,
-        error: errorData,
-      });
-
       if (
         response.status >= 400 &&
         response.status < 500 &&
@@ -1239,12 +891,7 @@ export async function addAllowedDomain(
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
-        logger.warn('addAllowedDomain', `Retrying in ${delay}ms`, {
-          endpoint: 'auth/allowed-domains',
-          attempt,
-          nextAttempt: attempt + 1,
-          delay,
-        });
+
         await RequestUtils.delay(delay);
         continue;
       }
@@ -1254,24 +901,11 @@ export async function addAllowedDomain(
         error: apiError,
       };
     } catch (error: any) {
-      logger.error('addAllowedDomain', `Error in attempt ${attempt}`, {
-        endpoint: 'auth/allowed-domains',
-        attempt,
-        error: error.message,
-        stack: error.stack,
-      });
-
       const apiError = handleAPIError(error, 'auth/allowed-domains', attempt);
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
-        logger.warn('addAllowedDomain', `Retrying after error in ${delay}ms`, {
-          endpoint: 'auth/allowed-domains',
-          attempt,
-          nextAttempt: attempt + 1,
-          delay,
-          errorType: error.name,
-        });
+
         await RequestUtils.delay(delay);
         continue;
       }
@@ -1324,24 +958,8 @@ export async function removeAllowedDomain(
     };
   }
 
-  logger.info('removeAllowedDomain', 'Starting remove allowed domain request', {
-    endpoint: 'auth/allowed-domains',
-    url,
-    domain,
-  });
-
   for (let attempt = 1; attempt <= REQUEST_CONFIG.MAX_RETRIES; attempt++) {
     try {
-      logger.info(
-        'removeAllowedDomain',
-        `Attempt ${attempt}/${REQUEST_CONFIG.MAX_RETRIES}`,
-        {
-          endpoint: 'auth/allowed-domains',
-          attempt,
-          url,
-        }
-      );
-
       const response = await RequestUtils.fetchWithTimeout(
         url,
         {
@@ -1356,20 +974,7 @@ export async function removeAllowedDomain(
         REQUEST_CONFIG.TIMEOUT
       );
 
-      logger.info('removeAllowedDomain', 'Response received', {
-        endpoint: 'auth/allowed-domains',
-        attempt,
-        status: response.status,
-        statusText: response.statusText,
-      });
-
       if (response.ok) {
-        logger.info('removeAllowedDomain', 'Remove allowed domain successful', {
-          endpoint: 'auth/allowed-domains',
-          attempt,
-          domain,
-        });
-
         return {
           success: true,
           data: { message: 'Domain removed successfully' },
@@ -1398,13 +1003,6 @@ export async function removeAllowedDomain(
         timestamp: new Date().toISOString(),
       };
 
-      logger.error('removeAllowedDomain', 'API Error', {
-        endpoint: 'auth/allowed-domains',
-        attempt,
-        status: response.status,
-        error: errorData,
-      });
-
       if (
         response.status >= 400 &&
         response.status < 500 &&
@@ -1418,12 +1016,7 @@ export async function removeAllowedDomain(
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
-        logger.warn('removeAllowedDomain', `Retrying in ${delay}ms`, {
-          endpoint: 'auth/allowed-domains',
-          attempt,
-          nextAttempt: attempt + 1,
-          delay,
-        });
+
         await RequestUtils.delay(delay);
         continue;
       }
@@ -1433,28 +1026,11 @@ export async function removeAllowedDomain(
         error: apiError,
       };
     } catch (error: any) {
-      logger.error('removeAllowedDomain', `Error in attempt ${attempt}`, {
-        endpoint: 'auth/allowed-domains',
-        attempt,
-        error: error.message,
-        stack: error.stack,
-      });
-
       const apiError = handleAPIError(error, 'auth/allowed-domains', attempt);
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
-        logger.warn(
-          'removeAllowedDomain',
-          `Retrying after error in ${delay}ms`,
-          {
-            endpoint: 'auth/allowed-domains',
-            attempt,
-            nextAttempt: attempt + 1,
-            delay,
-            errorType: error.name,
-          }
-        );
+
         await RequestUtils.delay(delay);
         continue;
       }
@@ -1503,23 +1079,8 @@ export async function getUser(): Promise<ServiceResponse<GetUserResponse>> {
     };
   }
 
-  logger.info('getUser', 'Starting get user request', {
-    endpoint: 'auth/me',
-    url,
-  });
-
   for (let attempt = 1; attempt <= REQUEST_CONFIG.MAX_RETRIES; attempt++) {
     try {
-      logger.info(
-        'getUser',
-        `Attempt ${attempt}/${REQUEST_CONFIG.MAX_RETRIES}`,
-        {
-          endpoint: 'auth/me',
-          attempt,
-          url,
-        }
-      );
-
       const response = await RequestUtils.fetchWithTimeout(
         url,
         {
@@ -1534,20 +1095,8 @@ export async function getUser(): Promise<ServiceResponse<GetUserResponse>> {
         REQUEST_CONFIG.TIMEOUT
       );
 
-      logger.info('getUser', 'Response received', {
-        endpoint: 'auth/me',
-        attempt,
-        status: response.status,
-        statusText: response.statusText,
-      });
-
       if (response.ok) {
         const data = await response.json();
-        logger.info('getUser', 'Get user successful', {
-          endpoint: 'auth/me',
-          attempt,
-          dataKeys: data ? Object.keys(data) : [],
-        });
 
         return {
           success: true,
@@ -1577,13 +1126,6 @@ export async function getUser(): Promise<ServiceResponse<GetUserResponse>> {
         timestamp: new Date().toISOString(),
       };
 
-      logger.error('getUser', 'API Error', {
-        endpoint: 'auth/me',
-        attempt,
-        status: response.status,
-        error: errorData,
-      });
-
       if (
         response.status >= 400 &&
         response.status < 500 &&
@@ -1597,12 +1139,6 @@ export async function getUser(): Promise<ServiceResponse<GetUserResponse>> {
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
-        logger.warn('getUser', `Retrying in ${delay}ms`, {
-          endpoint: 'auth/me',
-          attempt,
-          nextAttempt: attempt + 1,
-          delay,
-        });
         await RequestUtils.delay(delay);
         continue;
       }
@@ -1612,24 +1148,10 @@ export async function getUser(): Promise<ServiceResponse<GetUserResponse>> {
         error: apiError,
       };
     } catch (error: any) {
-      logger.error('getUser', `Error in attempt ${attempt}`, {
-        endpoint: 'auth/me',
-        attempt,
-        error: error.message,
-        stack: error.stack,
-      });
-
       const apiError = handleAPIError(error, 'auth/me', attempt);
 
       if (attempt < REQUEST_CONFIG.MAX_RETRIES) {
         const delay = RequestUtils.getRetryDelay(attempt - 1);
-        logger.warn('getUser', `Retrying after error in ${delay}ms`, {
-          endpoint: 'auth/me',
-          attempt,
-          nextAttempt: attempt + 1,
-          delay,
-          errorType: error.name,
-        });
         await RequestUtils.delay(delay);
         continue;
       }

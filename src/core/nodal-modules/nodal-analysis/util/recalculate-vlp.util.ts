@@ -35,8 +35,6 @@ export const recalculateVLPFromSavedData = async (
     await calculateIPRCurve(savedFormSet.hydraulicsData.bubble_point);
 
     await calculateHydraulicsCurve(savedFormSet.hydraulicsData, segments);
-
-    console.log('VLP curve recalculated successfully using saved data');
   } catch (error) {
     console.error('Error recalculating VLP curve from saved data:', error);
     throw error;
