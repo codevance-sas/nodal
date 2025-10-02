@@ -1,4 +1,4 @@
-# Wellbore Navigator
+# Wellbore Navigator CV-darkend
 
 An advanced wellbore analysis and design platform for oil and gas engineering, built with Next.js and modern web technologies.
 
